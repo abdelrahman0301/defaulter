@@ -204,7 +204,7 @@ class LoanDefaultPredictor:
         
         return defaults
     
-    def predict(self, input_data):
+def predict(self, input_data):
     """Make prediction using the actual LightGBM model"""
     if self.model is None:
         st.error("Model not loaded. Cannot make prediction.")
@@ -240,6 +240,7 @@ class LoanDefaultPredictor:
         st.error("Full error details:")
         st.code(traceback.format_exc())
         return 0.5, False
+
 
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
@@ -296,7 +297,7 @@ def main():
         submitted = st.form_submit_button("Predict Default Risk")
     
     if submitted:
-    user_inputs = {
+        user_inputs = {
         'income_total': income_total,
         'credit_amt': credit_amt,
         'annuity_amt': annuity_amt,
@@ -314,7 +315,7 @@ def main():
         'contract_type': contract_type,
         'gender': gender,
         'education': education,
-    }
+        }
     
     input_data = predictor.convert_to_model_format(user_inputs)
     
