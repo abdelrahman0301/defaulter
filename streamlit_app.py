@@ -204,47 +204,49 @@ class LoanDefaultPredictor:
         
         return defaults
     
-def predict(self, input_data):
-    """Make prediction using the actual LightGBM model"""
-    if self.model is None:
+    def predict(self, input_data):
+        if self.model is None:
         st.error("Model not loaded. Cannot make prediction.")
         return 0.5, False
-    
-    try:
-        input_df = pd.DataFrame([input_data])
+        try:
+            ordered_data = []
+            for feature in self.features:
+                if feature in input_data:
+                    ordered_data.append(input_data[feature])
+                else:
+                    ordered_data.append(0)
         
-        input_df = input_df.reindex(columns=self.features)
+            input_df = pd.DataFrame([ordered_data], columns=self.features)
         
-        input_df = input_df.fillna(0)
+            categorical_features = [
+                'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+                'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+                'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
+                'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
+            ]
         
-        categorical_features = [
-            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-            'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
-            'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
-        ]
+            for cat_feature in categorical_features:
+                if cat_feature in input_df.columns:
+                    input_df[cat_feature] = input_df[cat_feature].astype('category')
         
-        for cat_feature in categorical_features:
-            if cat_feature in input_df.columns:
-                input_df[cat_feature] = input_df[cat_feature].astype('category')
+            default_prob = self.model.predict_proba(input_df)[0][1]
         
-        default_prob = self.model.predict_proba(input_df)[0][1]
+            return default_prob, default_prob > 0.5
+
         
-        return default_prob, default_prob > 0.5
+        except Exception as e:
+            st.error(f"Prediction error: {str(e)}")
+            import traceback
+            st.error("Full error traceback:")
+            st.code(traceback.format_exc())
         
-    except Exception as e:
-        st.error(f"Prediction error: {str(e)}")
-        import traceback
-        st.error("Full error traceback:")
-        st.code(traceback.format_exc())
+            if 'input_df' in locals():
+                st.error("Input DataFrame info:")
+                st.write(f"Shape: {input_df.shape}")
+                st.write(f"Columns: {list(input_df.columns)}")
+                st.write(f"First row: {input_df.iloc[0].tolist()[:10]}")  
         
-        if 'input_df' in locals():
-            st.error("Input DataFrame info:")
-            st.write(f"Shape: {input_df.shape}")
-            st.write(f"Columns: {list(input_df.columns)}")
-            st.write(f"First row: {input_df.iloc[0].tolist()[:10]}")  
-        
-        return 0.5, False
+            return 0.5, False
 
 
 def main():
