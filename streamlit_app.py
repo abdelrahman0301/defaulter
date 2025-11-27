@@ -12,6 +12,7 @@ class LoanDefaultPredictor:
         self.load_model()
     
     def load_model(self):
+        """Load the actual LightGBM model"""
         try:
             self.model = joblib.load('LoanDefaulter_LightGBM.pkl')
             
@@ -63,6 +64,7 @@ class LoanDefaultPredictor:
             self.model = None
     
     def convert_to_model_format(self, user_inputs):
+        """Convert user-friendly inputs to model-expected format"""
         model_inputs = self.get_default_inputs()
         
         model_inputs['YEARS_BIRTH'] = -user_inputs['age']
@@ -89,6 +91,7 @@ class LoanDefaultPredictor:
         return model_inputs
     
     def get_default_inputs(self):
+        """Return default values for all features"""
         defaults = {}
         
         defaults['SK_ID_CURR'] = 300000
@@ -201,49 +204,30 @@ class LoanDefaultPredictor:
         
         return defaults
     
-def predict(self, input_data):
-    """Make prediction using the actual LightGBM model"""
-    if self.model is None:
-        st.error("Model not loaded. Cannot make prediction.")
-        return 0.5, False
-    
-    try:
-        input_df = pd.DataFrame([input_data])
+    def predict(self, input_data):
+        """Make prediction using the actual LightGBM model"""
+        if self.model is None:
+            st.error("Model not loaded. Cannot make prediction.")
+            return 0.5, False
         
-        missing_features = set(self.features) - set(input_df.columns)
-        for feature in missing_features:
-            input_df[feature] = 0 
-        
-        input_df = input_df[self.features]
-        
-        categorical_features = [
-            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-            'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
-            'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
-        ]
-        
-        for cat_feature in categorical_features:
-            if cat_feature in input_df.columns:
-                input_df[cat_feature] = input_df[cat_feature].astype('category')
-        
-        for col in input_df.columns:
-            if col not in categorical_features:
-                input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
-        
-        input_df = input_df.fillna(0)
-        
-        default_prob = self.model.predict_proba(input_df)[0][1]
-        
-        return default_prob, default_prob > 0.5
-        
-    except Exception as e:
-        st.error(f"Prediction error: {str(e)}")
-        st.write(f"Input data keys: {list(input_data.keys()) if 'input_data' in locals() else 'No input data'}")
-        st.write(f"Expected features count: {len(self.features)}")
-        st.write(f"Input DataFrame shape: {input_df.shape if 'input_df' in locals() else 'No DataFrame'}")
-        return 0.5, False
-        
+        try:
+            input_df = pd.DataFrame([input_data])
+            
+            missing_features = set(self.features) - set(input_df.columns)
+            if missing_features:
+                st.error(f"Missing features: {missing_features}")
+                return 0.5, False
+            
+            input_df = input_df[self.features]
+            
+            default_prob = self.model.predict_proba(input_df)[0][1]
+            
+            return default_prob, default_prob > 0.5
+            
+        except Exception as e:
+            st.error(f"Prediction error: {str(e)}")
+            return 0.5, False
+
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
     
