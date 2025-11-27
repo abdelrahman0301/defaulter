@@ -206,8 +206,8 @@ class LoanDefaultPredictor:
     
     def predict(self, input_data):
         if self.model is None:
-        st.error("Model not loaded. Cannot make prediction.")
-        return 0.5, False
+            st.error("Model not loaded. Cannot make prediction.")
+            return 0.5, False
         try:
             ordered_data = []
             for feature in self.features:
