@@ -212,19 +212,13 @@ class LoanDefaultPredictor:
             ordered_data = [input_data.get(f, 0) for f in self.features]
             input_df = pd.DataFrame([ordered_data], columns=self.features)
 
-            categorical_features = [
-                'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-                'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-                'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
-                'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
-            ]
+            string_columns = input_df.select_dtypes(include=['object']).columns
 
             def encode_as_int(x):
                 return abs(hash(str(x))) % 10_000_000  
 
-            for col in categorical_features:
-                if col in input_df.columns:
-                    input_df[col] = input_df[col].apply(encode_as_int)
+            for col in string_columns:
+                input_df[col] = input_df[col].apply(encode_as_int)
 
             X = input_df.to_numpy(dtype=float)
 
