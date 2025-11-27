@@ -208,31 +208,31 @@ def predict(self, input_data):
         return 0.5, False
     
     try:
-        input_df = pd.DataFrame([input_data])
-        
-        missing_features = set(self.features) - set(input_df.columns)
-        extra_features = set(input_df.columns) - set(self.features)
-        
-        for feature in missing_features:
-            input_df[feature] = 0
-        
-        input_df = input_df[self.features]
+        input_df = pd.DataFrame(columns=self.features)
         
         for feature in self.features:
-            if feature in input_df.columns:
-                if input_df[feature].dtype == 'object':
-                    input_df[feature] = input_df[feature].astype('category')
+            if feature in input_data:
+                input_df[feature] = [input_data[feature]]
+            else:
+                if any(x in feature for x in ['FLAG', 'NFLAG', 'REG_', 'LIVE_']):
+                    input_df[feature] = [0]  
+                elif 'AMT' in feature:
+                    input_df[feature] = [0.0] 
+                elif 'YEARS' in feature:
+                    input_df[feature] = [0]  
                 else:
-                    input_df[feature] = pd.to_numeric(input_df[feature], errors='coerce')
+                    input_df[feature] = [0]  
         
-        input_df = input_df.fillna(0)
+        categorical_features = [
+            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 
+            'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
+            'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
+        ]
         
-        if hasattr(self.model, 'feature_name_'):
-            if hasattr(self.model, '_categorical_feature'):
-                categorical_features = self.model._categorical_feature
-                for feature in categorical_features:
-                    if feature in input_df.columns:
-                        input_df[feature] = input_df[feature].astype('category')
+        for cat_feature in categorical_features:
+            if cat_feature in input_df.columns:
+                input_df[cat_feature] = input_df[cat_feature].astype('category')
         
         default_prob = self.model.predict_proba(input_df)[0][1]
         
@@ -240,10 +240,10 @@ def predict(self, input_data):
         
     except Exception as e:
         st.error(f"Prediction error: {str(e)}")
-        st.error(f"Input features: {list(input_df.columns)}")
-        st.error(f"Expected features: {self.features}")
+        import traceback
+        st.error(f"Detailed error: {traceback.format_exc()}")
         return 0.5, False
-
+        
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
     
