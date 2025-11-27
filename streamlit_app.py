@@ -12,7 +12,6 @@ class LoanDefaultPredictor:
         self.load_model()
     
     def load_model(self):
-        """Load the actual LightGBM model"""
         try:
             self.model = joblib.load('LoanDefaulter_LightGBM.pkl')
             
