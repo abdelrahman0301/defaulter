@@ -213,22 +213,9 @@ class LoanDefaultPredictor:
             ordered_data = [input_data.get(f, 0) for f in self.features]
             input_df = pd.DataFrame([ordered_data], columns=self.features)
 
-            categorical_features = [
-                'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-                'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-                'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
-                'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
-            ]
+            X = input_df.to_numpy()
 
-            import hashlib
-            def hash_str(x):
-                return int(hashlib.md5(str(x).encode()).hexdigest()[:8], 16)
-
-            for col in categorical_features:
-                if col in input_df.columns:
-                    input_df[col] = input_df[col].apply(hash_str)
-
-            default_prob = self.model.predict_proba(input_df)[0][1]
+            default_prob = self.model.predict_proba(X)[0][1]
             return default_prob, default_prob > 0.5
 
         except Exception as e:
@@ -236,6 +223,7 @@ class LoanDefaultPredictor:
             import traceback
             st.code(traceback.format_exc())
             return 0.5, False
+
 
 
 
