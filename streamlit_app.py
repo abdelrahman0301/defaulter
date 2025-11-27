@@ -208,24 +208,17 @@ def predict(self, input_data):
         return 0.5, False
     
     try:
-        input_df = pd.DataFrame(columns=self.features)
+        input_df = pd.DataFrame([input_data])
         
-        for feature in self.features:
-            if feature in input_data:
-                input_df[feature] = [input_data[feature]]
-            else:
-                if any(x in feature for x in ['FLAG', 'NFLAG', 'REG_', 'LIVE_']):
-                    input_df[feature] = [0]  
-                elif 'AMT' in feature:
-                    input_df[feature] = [0.0] 
-                elif 'YEARS' in feature:
-                    input_df[feature] = [0]  
-                else:
-                    input_df[feature] = [0]  
+        missing_features = set(self.features) - set(input_df.columns)
+        for feature in missing_features:
+            input_df[feature] = 0 
+        
+        input_df = input_df[self.features]
         
         categorical_features = [
             'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 
+            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
             'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
             'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
         ]
@@ -234,14 +227,21 @@ def predict(self, input_data):
             if cat_feature in input_df.columns:
                 input_df[cat_feature] = input_df[cat_feature].astype('category')
         
+        for col in input_df.columns:
+            if col not in categorical_features:
+                input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
+        
+        input_df = input_df.fillna(0)
+        
         default_prob = self.model.predict_proba(input_df)[0][1]
         
         return default_prob, default_prob > 0.5
         
     except Exception as e:
         st.error(f"Prediction error: {str(e)}")
-        import traceback
-        st.error(f"Detailed error: {traceback.format_exc()}")
+        st.write(f"Input data keys: {list(input_data.keys()) if 'input_data' in locals() else 'No input data'}")
+        st.write(f"Expected features count: {len(self.features)}")
+        st.write(f"Input DataFrame shape: {input_df.shape if 'input_df' in locals() else 'No DataFrame'}")
         return 0.5, False
         
 def main():
