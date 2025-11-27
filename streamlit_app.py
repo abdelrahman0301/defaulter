@@ -205,23 +205,23 @@ class LoanDefaultPredictor:
         return defaults
     
     def predict(self, input_data):
-    if self.model is None:
-        st.error("Model not loaded. Cannot make prediction.")
-        return 0.5, False
+        if self.model is None:
+            st.error("Model not loaded. Cannot make prediction.")
+            return 0.5, False
 
-    try:
-        ordered_data = [input_data.get(f, 0) for f in self.features]
-        input_df = pd.DataFrame([ordered_data], columns=self.features)
+        try:
+            ordered_data = [input_data.get(f, 0) for f in self.features]
+            input_df = pd.DataFrame([ordered_data], columns=self.features)
 
 
-        default_prob = self.model.predict_proba(input_df)[0][1]
-        return default_prob, default_prob > 0.5
+            default_prob = self.model.predict_proba(input_df)[0][1]
+            return default_prob, default_prob > 0.5
 
-    except Exception as e:
-        st.error(f"Prediction error: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
-        return 0.5, False
+        except Exception as e:
+            st.error(f"Prediction error: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return 0.5, False
 
 
 
