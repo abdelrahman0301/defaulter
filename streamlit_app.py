@@ -205,28 +205,41 @@ class LoanDefaultPredictor:
         return defaults
     
     def predict(self, input_data):
-        """Make prediction using the actual LightGBM model"""
-        if self.model is None:
-            st.error("Model not loaded. Cannot make prediction.")
-            return 0.5, False
+    """Make prediction using the actual LightGBM model"""
+    if self.model is None:
+        st.error("Model not loaded. Cannot make prediction.")
+        return 0.5, False
+    
+    try:
+        input_df = pd.DataFrame([input_data])
         
-        try:
-            input_df = pd.DataFrame([input_data])
-            
-            missing_features = set(self.features) - set(input_df.columns)
-            if missing_features:
-                st.error(f"Missing features: {missing_features}")
-                return 0.5, False
-            
-            input_df = input_df[self.features]
-            
-            default_prob = self.model.predict_proba(input_df)[0][1]
-            
-            return default_prob, default_prob > 0.5
-            
-        except Exception as e:
-            st.error(f"Prediction error: {str(e)}")
-            return 0.5, False
+        missing_features = set(self.features) - set(input_df.columns)
+        for feature in missing_features:
+            input_df[feature] = 0  
+        
+        input_df = input_df[self.features]
+        
+        categorical_features = [
+            'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+            'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+            'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'WEEKDAY_APPR_PROCESS_START',
+            'OCCUPATION_TYPE', 'ORGANIZATION_TYPE'
+        ]
+        
+        for cat_feature in categorical_features:
+            if cat_feature in input_df.columns:
+                input_df[cat_feature] = input_df[cat_feature].astype('category')
+        
+        default_prob = self.model.predict_proba(input_df)[0][1]
+        
+        return default_prob, default_prob > 0.5
+        
+    except Exception as e:
+        st.error(f"Prediction error: {str(e)}")
+        import traceback
+        st.error("Full error details:")
+        st.code(traceback.format_exc())
+        return 0.5, False
 
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
@@ -283,30 +296,68 @@ def main():
         submitted = st.form_submit_button("Predict Default Risk")
     
     if submitted:
-        user_inputs = {
-            'income_total': income_total,
-            'credit_amt': credit_amt,
-            'annuity_amt': annuity_amt,
-            'goods_price': goods_price,
-            'cnt_children': cnt_children,
-            'cnt_fam_members': cnt_fam_members,
-            'age': age,
-            'employment_length': employment_length,
-            'ext_source_2': ext_source_2,
-            'ext_source_3': ext_source_3,
-            'region_rating': region_rating,
-            'obs_30_cnt': obs_30_cnt,
-            'def_30_cnt': def_30_cnt,
-            'amt_req_year': amt_req_year,
-            'contract_type': contract_type,
-            'gender': gender,
-            'education': education,
-        }
+    user_inputs = {
+        'income_total': income_total,
+        'credit_amt': credit_amt,
+        'annuity_amt': annuity_amt,
+        'goods_price': goods_price,
+        'cnt_children': cnt_children,
+        'cnt_fam_members': cnt_fam_members,
+        'age': age,
+        'employment_length': employment_length,
+        'ext_source_2': ext_source_2,
+        'ext_source_3': ext_source_3,
+        'region_rating': region_rating,
+        'obs_30_cnt': obs_30_cnt,
+        'def_30_cnt': def_30_cnt,
+        'amt_req_year': amt_req_year,
+        'contract_type': contract_type,
+        'gender': gender,
+        'education': education,
+    }
+    
+    input_data = predictor.convert_to_model_format(user_inputs)
+    
+    # =====  DEBUG  =====
+    with st.expander("🔧 Debug Info (Click to expand)"):
+        st.write("### Model Information")
+        st.write(f"Model loaded: {predictor.model is not None}")
+        if predictor.model is not None:
+            st.write(f"Model features count: {len(predictor.features)}")
+            st.write(f"Input data features count: {len(input_data)}")
         
-        input_data = predictor.convert_to_model_format(user_inputs)
+        st.write("### Feature Comparison")
+        col1, col2 = st.columns(2)
         
-        with st.spinner("Analyzing application..."):
-            default_prob, will_default = predictor.predict(input_data)
+        with col1:
+            st.write("**First 15 Expected Features:**")
+            st.write(predictor.features[:15])
+            
+        with col2:
+            st.write("**First 15 Input Features:**")
+            st.write(list(input_data.keys())[:15])
+        
+        missing_features = set(predictor.features) - set(input_data.keys())
+        extra_features = set(input_data.keys()) - set(predictor.features)
+        
+        if missing_features:
+            st.error(f"❌ Missing {len(missing_features)} features:")
+            st.write(list(missing_features)[:10]) 
+        else:
+            st.success("✅ All expected features are present")
+            
+        if extra_features:
+            st.warning(f"⚠️ Extra {len(extra_features)} features in input:")
+            st.write(list(extra_features)[:10])  
+        
+        st.write("### Sample Input Values")
+        sample_keys = list(input_data.keys())[:10]
+        for key in sample_keys:
+            st.write(f"- {key}: {input_data[key]} (type: {type(input_data[key])})")
+    # ===== END DEBUG =====
+    
+    with st.spinner("Analyzing application..."):
+        default_prob, will_default = predictor.predict(input_data)
         
         st.header("Prediction Results")
         
