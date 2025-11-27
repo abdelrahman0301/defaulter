@@ -12,7 +12,6 @@ class LoanDefaultPredictor:
         self.load_model()
     
     def load_model(self):
-        """Load the actual LightGBM model"""
         try:
             self.model = joblib.load('LoanDefaulter_LightGBM.pkl')
             
@@ -64,7 +63,6 @@ class LoanDefaultPredictor:
             self.model = None
     
     def convert_to_model_format(self, user_inputs):
-        """Convert user-friendly inputs to model-expected format"""
         model_inputs = self.get_default_inputs()
         
         model_inputs['YEARS_BIRTH'] = -user_inputs['age']
@@ -91,7 +89,6 @@ class LoanDefaultPredictor:
         return model_inputs
     
     def get_default_inputs(self):
-        """Return default values for all features"""
         defaults = {}
         
         defaults['SK_ID_CURR'] = 300000
