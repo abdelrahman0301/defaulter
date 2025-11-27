@@ -201,29 +201,48 @@ class LoanDefaultPredictor:
         
         return defaults
     
-    def predict(self, input_data):
-        """Make prediction using the actual LightGBM model"""
-        if self.model is None:
-            st.error("Model not loaded. Cannot make prediction.")
-            return 0.5, False
+def predict(self, input_data):
+    """Make prediction using the actual LightGBM model"""
+    if self.model is None:
+        st.error("Model not loaded. Cannot make prediction.")
+        return 0.5, False
+    
+    try:
+        input_df = pd.DataFrame([input_data])
         
-        try:
-            input_df = pd.DataFrame([input_data])
-            
-            missing_features = set(self.features) - set(input_df.columns)
-            if missing_features:
-                st.error(f"Missing features: {missing_features}")
-                return 0.5, False
-            
-            input_df = input_df[self.features]
-            
-            default_prob = self.model.predict_proba(input_df)[0][1]
-            
-            return default_prob, default_prob > 0.5
-            
-        except Exception as e:
-            st.error(f"Prediction error: {str(e)}")
-            return 0.5, False
+        missing_features = set(self.features) - set(input_df.columns)
+        extra_features = set(input_df.columns) - set(self.features)
+        
+        for feature in missing_features:
+            input_df[feature] = 0
+        
+        input_df = input_df[self.features]
+        
+        for feature in self.features:
+            if feature in input_df.columns:
+                if input_df[feature].dtype == 'object':
+                    input_df[feature] = input_df[feature].astype('category')
+                else:
+                    input_df[feature] = pd.to_numeric(input_df[feature], errors='coerce')
+        
+        input_df = input_df.fillna(0)
+        
+        if hasattr(self.model, 'feature_name_'):
+            if hasattr(self.model, '_categorical_feature'):
+                categorical_features = self.model._categorical_feature
+                for feature in categorical_features:
+                    if feature in input_df.columns:
+                        input_df[feature] = input_df[feature].astype('category')
+        
+        default_prob = self.model.predict_proba(input_df)[0][1]
+        
+        return default_prob, default_prob > 0.5
+        
+    except Exception as e:
+        st.error(f"Prediction error: {str(e)}")
+        st.error(f"Input features: {list(input_df.columns)}")
+        st.error(f"Expected features: {self.features}")
+        return 0.5, False
 
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
