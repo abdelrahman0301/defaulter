@@ -366,7 +366,12 @@ def main():
             )
             
         with col2:
-            status = "High Risk ❌" if will_default else "Low Risk ✅"
+            if default_prob < 0.3:
+                status = "Low Risk ✅"
+            elif default_prob < 0.6:
+                status = "Medium Risk ⚠️"
+            else:
+                status = "High Risk ❌"
             st.metric(label="Risk Assessment", value=status)
         
         st.subheader("Risk Interpretation")
