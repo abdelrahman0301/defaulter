@@ -84,11 +84,18 @@ class LoanDefaultPredictor:
             'NAME_CONTRACT_TYPE': user_inputs['contract_type'],
             'CODE_GENDER': user_inputs['gender'],
             'NAME_EDUCATION_TYPE': user_inputs['education'],
+            'FLAG_OWN_CAR': user_inputs['flag_own_car'],
+            'FLAG_OWN_REALTY': user_inputs['flag_own_realty'],
+            'OWN_CAR_AGE': user_inputs['own_car_age'],
+            'FLAG_WORK_PHONE': user_inputs['flag_work_phone'],
+            'FLAG_PHONE': user_inputs['flag_phone'],
+            'FLAG_EMAIL': user_inputs['flag_email'],
+            'REGION_RATING_CLIENT_W_CITY': user_inputs['region_rating_w_city'],
+            'HOUR_APPR_PROCESS_START': user_inputs['hour_appr_process_start'],
+            'OBS_60_CNT_SOCIAL_CIRCLE': user_inputs['obs_60_cnt'],
+            'DEF_60_CNT_SOCIAL_CIRCLE': user_inputs['def_60_cnt'],
+            'AMT_REQ_CREDIT_BUREAU_MON': user_inputs['amt_req_mon'],
         })
-        
-        for feature, value in user_inputs.get('additional_features', {}).items():
-            if feature in model_inputs:
-                model_inputs[feature] = value
         
         return model_inputs
     
@@ -233,6 +240,10 @@ class LoanDefaultPredictor:
             st.code(traceback.format_exc())
             return 0.5, False
 
+
+
+
+
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
     
@@ -279,6 +290,9 @@ def main():
             obs_30_cnt = st.number_input("Observable 30 Days Social Circle (OBS_30_CNT_SOCIAL_CIRCLE)", min_value=0, value=2)
             def_30_cnt = st.number_input("Default 30 Days Social Circle (DEF_30_CNT_SOCIAL_CIRCLE)", min_value=0, value=0)
             amt_req_year = st.number_input("Credit Bureau Requests Year (AMT_REQ_CREDIT_BUREAU_YEAR)", min_value=0, value=1)
+            obs_60_cnt = st.number_input("Observable 60 Days Social Circle (OBS_60_CNT_SOCIAL_CIRCLE)", min_value=0, value=2)
+            def_60_cnt = st.number_input("Default 60 Days Social Circle (DEF_60_CNT_SOCIAL_CIRCLE)", min_value=0, value=0)
+            amt_req_mon = st.number_input("Credit Bureau Requests Month (AMT_REQ_CREDIT_BUREAU_MON)", min_value=0, value=1)
             
         with col5:
             contract_type = st.selectbox("Contract Type (NAME_CONTRACT_TYPE)", ["Cash loans", "Revolving loans"])
@@ -287,106 +301,21 @@ def main():
                 "Secondary / secondary special", "Higher education", 
                 "Incomplete higher", "Lower secondary", "Academic degree"
             ])
+            flag_own_car = st.selectbox("Owns Car (FLAG_OWN_CAR)", ["Y", "N"])
+            flag_own_realty = st.selectbox("Owns Realty (FLAG_OWN_REALTY)", ["Y", "N"])
+            own_car_age = st.number_input("Car Age if Owned (OWN_CAR_AGE)", min_value=0, value=0)
         
-        st.subheader("Advanced Features")
+        st.subheader("Contact & Location Details")
         col6, col7 = st.columns(2)
         
         with col6:
-            additional_feature_1 = st.selectbox("Additional Feature 1", [
-                "FLAG_OWN_CAR", "FLAG_OWN_REALTY", "OWN_CAR_AGE", "FLAG_MOBIL", 
-                "FLAG_EMP_PHONE", "FLAG_WORK_PHONE", "FLAG_CONT_MOBILE", 
-                "FLAG_PHONE", "FLAG_EMAIL", "OCCUPATION_TYPE", 
-                "REGION_RATING_CLIENT_W_CITY", "WEEKDAY_APPR_PROCESS_START",
-                "HOUR_APPR_PROCESS_START", "ORGANIZATION_TYPE", 
-                "OBS_60_CNT_SOCIAL_CIRCLE", "DEF_60_CNT_SOCIAL_CIRCLE"
-            ])
+            flag_work_phone = st.selectbox("Has Work Phone (FLAG_WORK_PHONE)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
+            flag_phone = st.selectbox("Has Phone (FLAG_PHONE)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
+            flag_email = st.selectbox("Has Email (FLAG_EMAIL)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
             
-            if additional_feature_1 == "FLAG_OWN_CAR":
-                value_1 = st.selectbox("Value for Feature 1", ["Y", "N"])
-            elif additional_feature_1 == "FLAG_OWN_REALTY":
-                value_1 = st.selectbox("Value for Feature 1", ["Y", "N"])
-            elif additional_feature_1 == "OWN_CAR_AGE":
-                value_1 = st.number_input("Value for Feature 1", min_value=0, max_value=50, value=0)
-            elif additional_feature_1 in ["FLAG_MOBIL", "FLAG_EMP_PHONE", "FLAG_WORK_PHONE", 
-                                        "FLAG_CONT_MOBILE", "FLAG_PHONE", "FLAG_EMAIL"]:
-                value_1 = st.selectbox("Value for Feature 1", [0, 1])
-            elif additional_feature_1 == "OCCUPATION_TYPE":
-                value_1 = st.selectbox("Value for Feature 1", [
-                    "Laborers", "Core staff", "Sales staff", "Managers", "Drivers", 
-                    "High skill tech staff", "Accountants", "Medicine staff", 
-                    "Cooking staff", "Private service staff", "Secretaries", 
-                    "Waiters/barmen staff", "Low-skill Laborers", "Realty agents", 
-                    "HR staff", "IT staff"
-                ])
-            elif additional_feature_1 == "REGION_RATING_CLIENT_W_CITY":
-                value_1 = st.selectbox("Value for Feature 1", [1, 2, 3])
-            elif additional_feature_1 == "WEEKDAY_APPR_PROCESS_START":
-                value_1 = st.selectbox("Value for Feature 1", [
-                    "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", 
-                    "FRIDAY", "SATURDAY", "SUNDAY"
-                ])
-            elif additional_feature_1 == "HOUR_APPR_PROCESS_START":
-                value_1 = st.slider("Value for Feature 1", 0, 23, 10)
-            elif additional_feature_1 == "ORGANIZATION_TYPE":
-                value_1 = st.selectbox("Value for Feature 1", [
-                    "Business Entity Type 3", "School", "Government", "Religion", 
-                    "Other", "XNA", "Electricity", "Medicine", "Business Entity Type 2", 
-                    "Self-employed", "Transport: type 3", "Construction", "Housing", 
-                    "Kindergarten", "Trade: type 7", "Industry: type 11", 
-                    "Military", "Services", "Security Ministries", "Transport: type 2", 
-                    "University", "Police", "Business Entity Type 1", "Postal", 
-                    "Agriculture", "Restaurant", "Culture", "Transport: type 4", 
-                    "Industry: type 1", "Emergency", "Security", "Trade: type 2", 
-                    "Industry: type 4", "Bank", "Insurance", "Trade: type 3", 
-                    "Industry: type 7", "Industry: type 3", "Hotel", "Industry: type 9"
-                ])
-            elif additional_feature_1 in ["OBS_60_CNT_SOCIAL_CIRCLE", "DEF_60_CNT_SOCIAL_CIRCLE"]:
-                value_1 = st.number_input("Value for Feature 1", min_value=0, max_value=20, value=2)
-            else:
-                value_1 = st.number_input("Value for Feature 1", value=0)
-        
         with col7:
-            additional_feature_2 = st.selectbox("Additional Feature 2", [
-                "NAME_TYPE_SUITE", "NAME_INCOME_TYPE", "NAME_FAMILY_STATUS", 
-                "NAME_HOUSING_TYPE", "REGION_POPULATION_RELATIVE", 
-                "AMT_REQ_CREDIT_BUREAU_HOUR", "AMT_REQ_CREDIT_BUREAU_DAY", 
-                "AMT_REQ_CREDIT_BUREAU_WEEK", "AMT_REQ_CREDIT_BUREAU_MON", 
-                "AMT_REQ_CREDIT_BUREAU_QRT", "YEARS_REGISTRATION", 
-                "YEARS_ID_PUBLISH", "YEARS_LAST_PHONE_CHANGE"
-            ])
-            
-            if additional_feature_2 == "NAME_TYPE_SUITE":
-                value_2 = st.selectbox("Value for Feature 2", [
-                    "Unaccompanied", "Family", "Spouse, partner", 
-                    "Children", "Other_B", "Other_A", "Group of people"
-                ])
-            elif additional_feature_2 == "NAME_INCOME_TYPE":
-                value_2 = st.selectbox("Value for Feature 2", [
-                    "Working", "State servant", "Commercial associate", 
-                    "Pensioner", "Unemployed", "Student", "Businessman", 
-                    "Maternity leave"
-                ])
-            elif additional_feature_2 == "NAME_FAMILY_STATUS":
-                value_2 = st.selectbox("Value for Feature 2", [
-                    "Married", "Single / not married", "Civil marriage", 
-                    "Separated", "Widow", "Unknown"
-                ])
-            elif additional_feature_2 == "NAME_HOUSING_TYPE":
-                value_2 = st.selectbox("Value for Feature 2", [
-                    "House / apartment", "With parents", "Municipal apartment", 
-                    "Rented apartment", "Office apartment", "Co-op apartment"
-                ])
-            elif additional_feature_2 == "REGION_POPULATION_RELATIVE":
-                value_2 = st.slider("Value for Feature 2", 0.0, 0.1, 0.02, 0.001)
-            elif additional_feature_2 in ["AMT_REQ_CREDIT_BUREAU_HOUR", "AMT_REQ_CREDIT_BUREAU_DAY", 
-                                        "AMT_REQ_CREDIT_BUREAU_WEEK"]:
-                value_2 = st.number_input("Value for Feature 2", min_value=0, max_value=10, value=0)
-            elif additional_feature_2 in ["AMT_REQ_CREDIT_BUREAU_MON", "AMT_REQ_CREDIT_BUREAU_QRT"]:
-                value_2 = st.number_input("Value for Feature 2", min_value=0, max_value=20, value=1)
-            elif additional_feature_2 in ["YEARS_REGISTRATION", "YEARS_ID_PUBLISH", "YEARS_LAST_PHONE_CHANGE"]:
-                value_2 = st.number_input("Value for Feature 2", min_value=-50, max_value=0, value=-5)
-            else:
-                value_2 = st.number_input("Value for Feature 2", value=0)
+            region_rating_w_city = st.selectbox("Region Rating with City (REGION_RATING_CLIENT_W_CITY)", [1, 2, 3], index=1)
+            hour_appr_process_start = st.number_input("Application Hour (HOUR_APPR_PROCESS_START)", min_value=0, max_value=23, value=10)
         
         submitted = st.form_submit_button("Predict Default Risk")
         
@@ -409,10 +338,17 @@ def main():
                 'contract_type': contract_type,
                 'gender': gender,
                 'education': education,
-                'additional_features': {
-                    additional_feature_1: value_1,
-                    additional_feature_2: value_2
-                }
+                'flag_own_car': flag_own_car,
+                'flag_own_realty': flag_own_realty,
+                'own_car_age': own_car_age,
+                'flag_work_phone': flag_work_phone,
+                'flag_phone': flag_phone,
+                'flag_email': flag_email,
+                'region_rating_w_city': region_rating_w_city,
+                'hour_appr_process_start': hour_appr_process_start,
+                'obs_60_cnt': obs_60_cnt,
+                'def_60_cnt': def_60_cnt,
+                'amt_req_mon': amt_req_mon,
             }
     
     if submitted and user_inputs is not None:
