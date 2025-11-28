@@ -240,10 +240,6 @@ class LoanDefaultPredictor:
             st.code(traceback.format_exc())
             return 0.5, False
 
-
-
-
-
 def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
     
@@ -353,42 +349,6 @@ def main():
     
     if submitted and user_inputs is not None:
         input_data = predictor.convert_to_model_format(user_inputs)
-        
-        with st.expander("🔧 Debug Info (Click to expand)"):
-            st.write("### Model Information")
-            st.write(f"Model loaded: {predictor.model is not None}")
-            if predictor.model is not None:
-                st.write(f"Model features count: {len(predictor.features)}")
-                st.write(f"Input data features count: {len(input_data)}")
-            
-            st.write("### Feature Comparison")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.write("**First 15 Expected Features:**")
-                st.write(predictor.features[:15])
-                
-            with col2:
-                st.write("**First 15 Input Features:**")
-                st.write(list(input_data.keys())[:15])
-            
-            missing_features = set(predictor.features) - set(input_data.keys())
-            extra_features = set(input_data.keys()) - set(predictor.features)
-            
-            if missing_features:
-                st.error(f"❌ Missing {len(missing_features)} features:")
-                st.write(list(missing_features)[:10])
-            else:
-                st.success("✅ All expected features are present")
-                
-            if extra_features:
-                st.warning(f"⚠️ Extra {len(extra_features)} features in input:")
-                st.write(list(extra_features)[:10])
-            
-            st.write("### Sample Input Values")
-            sample_keys = list(input_data.keys())[:10]
-            for key in sample_keys:
-                st.write(f"- {key}: {input_data[key]} (type: {type(input_data[key])})")
         
         with st.spinner("Analyzing application..."):
             default_prob, will_default = predictor.predict(input_data)
