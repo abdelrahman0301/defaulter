@@ -306,7 +306,7 @@ def main():
             elif additional_feature_1 == "FLAG_OWN_REALTY":
                 value_1 = st.selectbox("Value for Feature 1", ["Y", "N"])
             elif additional_feature_1 == "OWN_CAR_AGE":
-                value_1 = st.number_input("Value for Feature 1", min_value=0, value=0)
+                value_1 = st.number_input("Value for Feature 1", min_value=0, max_value=50, value=0)
             elif additional_feature_1 in ["FLAG_MOBIL", "FLAG_EMP_PHONE", "FLAG_WORK_PHONE", 
                                         "FLAG_CONT_MOBILE", "FLAG_PHONE", "FLAG_EMAIL"]:
                 value_1 = st.selectbox("Value for Feature 1", [0, 1])
@@ -338,12 +338,10 @@ def main():
                     "Agriculture", "Restaurant", "Culture", "Transport: type 4", 
                     "Industry: type 1", "Emergency", "Security", "Trade: type 2", 
                     "Industry: type 4", "Bank", "Insurance", "Trade: type 3", 
-                    "Industry: type 7", "Industry: type 3", "Hotel", "Industry: type 9", 
-                    "Mobile", "Legal Services", "Advertising", "Cleaning", 
-                    "Industry: type 2", "Telecom", "Realtor", "Industry: type 12"
+                    "Industry: type 7", "Industry: type 3", "Hotel", "Industry: type 9"
                 ])
             elif additional_feature_1 in ["OBS_60_CNT_SOCIAL_CIRCLE", "DEF_60_CNT_SOCIAL_CIRCLE"]:
-                value_1 = st.number_input("Value for Feature 1", min_value=0, value=2)
+                value_1 = st.number_input("Value for Feature 1", min_value=0, max_value=20, value=2)
             else:
                 value_1 = st.number_input("Value for Feature 1", value=0)
         
@@ -379,13 +377,14 @@ def main():
                     "Rented apartment", "Office apartment", "Co-op apartment"
                 ])
             elif additional_feature_2 == "REGION_POPULATION_RELATIVE":
-                value_2 = st.slider("Value for Feature 2", 0.0, 1.0, 0.02, 0.01)
+                value_2 = st.slider("Value for Feature 2", 0.0, 0.1, 0.02, 0.001)
             elif additional_feature_2 in ["AMT_REQ_CREDIT_BUREAU_HOUR", "AMT_REQ_CREDIT_BUREAU_DAY", 
-                                        "AMT_REQ_CREDIT_BUREAU_WEEK", "AMT_REQ_CREDIT_BUREAU_MON", 
-                                        "AMT_REQ_CREDIT_BUREAU_QRT"]:
-                value_2 = st.number_input("Value for Feature 2", min_value=0, value=0)
+                                        "AMT_REQ_CREDIT_BUREAU_WEEK"]:
+                value_2 = st.number_input("Value for Feature 2", min_value=0, max_value=10, value=0)
+            elif additional_feature_2 in ["AMT_REQ_CREDIT_BUREAU_MON", "AMT_REQ_CREDIT_BUREAU_QRT"]:
+                value_2 = st.number_input("Value for Feature 2", min_value=0, max_value=20, value=1)
             elif additional_feature_2 in ["YEARS_REGISTRATION", "YEARS_ID_PUBLISH", "YEARS_LAST_PHONE_CHANGE"]:
-                value_2 = st.number_input("Value for Feature 2", max_value=0, value=-5)
+                value_2 = st.number_input("Value for Feature 2", min_value=-50, max_value=0, value=-5)
             else:
                 value_2 = st.number_input("Value for Feature 2", value=0)
         
