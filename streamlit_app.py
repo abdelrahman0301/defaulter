@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 import joblib
 import warnings
-import lightgbm # <-- NEW IMPORT
+import lightgbm 
 
-# Suppress warnings for cleaner UI
 warnings.filterwarnings('ignore')
 
 class LoanDefaultPredictor:
@@ -19,16 +18,13 @@ class LoanDefaultPredictor:
         try:
             self.model = joblib.load('LoanDefaulter_LightGBM.pkl')
             
-            # 1. Load Feature Names
             if hasattr(self.model, 'feature_name_'):
                 self.features = self.model.feature_name_
             
-            # If the model is the raw Booster, we must rely on its feature names
             elif isinstance(self.model, lightgbm.Booster):
                 self.features = self.model.feature_name()
                 
             else:
-                # Fallback list if feature names aren't in the object
                 self.features = [
                     'ORGANIZATION_TYPE', 'EXT_SOURCE_3', 'EXT_SOURCE_2', 'YEARS_ID_PUBLISH', 
                     'YEARS_EMPLOYED', 'YEARS_REGISTRATION', 'YEARS_BIRTH', 'AMT_ANNUITY', 
@@ -51,19 +47,15 @@ class LoanDefaultPredictor:
                     'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>'
                 ]
             
-            # 2. Extract Category Mappings (Critical Fix for Hashing Issue)
             try:
-                # Check if it is the sklearn wrapper (has booster_ attribute)
                 if hasattr(self.model, 'booster_'):
                     booster = self.model.booster_
-                # Check if it is the raw Booster object itself
                 elif isinstance(self.model, lightgbm.Booster):
                     booster = self.model
                 else:
                     booster = None
 
                 if booster and hasattr(booster, 'pandas_categorical'):
-                    # Access the internal LightGBM booster to find category lists
                     self.cat_mappings = {
                         name: list(cats) 
                         for name, cats in zip(
@@ -80,9 +72,6 @@ class LoanDefaultPredictor:
             st.error("❌ Model file 'LoanDefaulter_LightGBM.pkl' not found. Please upload it.")
             self.model = None
     
-    # We remove this empty function
-    # def convert_to_model_format(self, inputs):
-    #     return inputs.copy()
     
     def predict(self, input_data):
         if self.model is None:
@@ -90,18 +79,14 @@ class LoanDefaultPredictor:
             return 0.5, False
 
         try:
-            # Create a DataFrame with a single row
             input_df = pd.DataFrame([input_data])
 
-            # Ensure all required columns exist (fill missing with 0)
             for f in self.features:
                 if f not in input_df.columns:
                     input_df[f] = 0
 
-            # Reorder columns to match the model's expectation exactly
             input_df = input_df[self.features]
 
-            # --- CRITICAL FIX: Categorical Encoding ---
             for col in input_df.columns:
                 if input_df[col].dtype == 'object' or col in self.cat_mappings:
                     
@@ -110,28 +95,21 @@ class LoanDefaultPredictor:
                         val = input_df.iloc[0][col]
                         
                         try:
-                            # Convert string to the integer index (e.g., 'Laborers' -> 4)
                             encoded_val = categories.index(val)
                         except ValueError:
-                            # If the user input isn't in the training list, use -1 (unknown)
                             encoded_val = -1
                             
                         input_df[col] = encoded_val
                     else:
-                        # Fallback if we don't have the mapping: assume missing/unknown
                         if isinstance(input_df.iloc[0][col], str):
                              input_df[col] = -1 
 
-            # Convert to float numpy array
             X = input_df.to_numpy(dtype=float)
 
-            # --- CRITICAL FIX: Handling Booster vs LGBMClassifier Prediction ---
             if isinstance(self.model, lightgbm.Booster):
-                # Raw Booster uses .predict() to return probability scores for binary objective
                 prob_scores = self.model.predict(X)
                 default_prob = prob_scores[0]
             else:
-                # Scikit-learn wrapper uses .predict_proba()
                 default_prob = self.model.predict_proba(X)[0][1]
             
             return default_prob, default_prob > 0.5
@@ -159,7 +137,6 @@ def main():
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             sk_id_curr = st.number_input("ID (SK_ID_CURR)", value=100001)
-            # FIX: Training data uses positive float years, do not convert to negative later
             years_birth = st.number_input("Age (Years)", min_value=18.0, value=30.0) 
             cnt_fam_members = st.number_input("Family Members", min_value=1.0, value=1.0)
         with c2:
@@ -167,7 +144,6 @@ def main():
             years_registration = st.number_input("Years Since Registration", min_value=0.0, value=5.0)
             years_id_publish = st.number_input("Years Since ID Publish", min_value=0.0, value=2.0)
         with c3:
-            # Common Home Credit categories
             occupation = st.selectbox("Occupation Type", 
                                       ["Laborers", "Sales staff", "Accountants", "Managers", "Drivers", "Core staff", "High skill tech staff", "Medicine staff"])
             organization = st.selectbox("Organization Type", 
@@ -238,8 +214,6 @@ def main():
 
             with cols_hist[3]:
                 st.markdown("**Encoded/Lambda Scores**")
-                # FIX: These are STRINGS/CATEGORIES in the model, not numbers.
-                # We use selectbox with common values (or XNA if unknown).
                 prev_prod_comb = st.selectbox("Prev Prod Combination", 
                                              ["Cash", "POS household with interest", "POS mobile with interest", "Card Street", "XNA"])
                 
@@ -252,7 +226,6 @@ def main():
         submitted = st.form_submit_button("Predict Default Risk")
 
     if submitted:
-        # Construct dictionary with raw user inputs
         user_data = {
             'ORGANIZATION_TYPE': organization,
             'EXT_SOURCE_3': ext3,
