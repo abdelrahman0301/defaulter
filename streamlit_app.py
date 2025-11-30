@@ -3,15 +3,12 @@ import pandas as pd
 import numpy as np
 import joblib
 import warnings
-import lightgbm 
-
 warnings.filterwarnings('ignore')
 
 class LoanDefaultPredictor:
     def __init__(self):
         self.model = None
         self.features = None
-        self.cat_mappings = {} 
         self.load_model()
     
     def load_model(self):
@@ -20,10 +17,6 @@ class LoanDefaultPredictor:
             
             if hasattr(self.model, 'feature_name_'):
                 self.features = self.model.feature_name_
-            
-            elif isinstance(self.model, lightgbm.Booster):
-                self.features = self.model.feature_name()
-                
             else:
                 self.features = [
                     'ORGANIZATION_TYPE', 'EXT_SOURCE_3', 'EXT_SOURCE_2', 'YEARS_ID_PUBLISH', 
@@ -47,31 +40,25 @@ class LoanDefaultPredictor:
                     'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>'
                 ]
             
-            try:
-                if hasattr(self.model, 'booster_'):
-                    booster = self.model.booster_
-                elif isinstance(self.model, lightgbm.Booster):
-                    booster = self.model
-                else:
-                    booster = None
-
-                if booster and hasattr(booster, 'pandas_categorical'):
-                    self.cat_mappings = {
-                        name: list(cats) 
-                        for name, cats in zip(
-                            booster.feature_name(), 
-                            booster.pandas_categorical
-                        )
-                    }
-            except Exception as e:
-                print(f"Warning: Could not extract specific category mappings. {e}")
-            
             st.success("✅ Credit Default Risk Model loaded successfully!")
             
         except FileNotFoundError:
-            st.error("❌ Model file 'LoanDefaulter_LightGBM.pkl' not found. Please upload it.")
+            st.error("❌ Model file 'LoanDefaulter_LightGBM.pkl' not found.")
             self.model = None
     
+    def convert_to_model_format(self, inputs):
+        
+        model_inputs = inputs.copy()
+        
+        time_features = [
+            'YEARS_BIRTH', 'YEARS_EMPLOYED', 'YEARS_REGISTRATION', 
+            'YEARS_ID_PUBLISH', 'YEARS_LAST_PHONE_CHANGE'
+        ]
+        for feat in time_features:
+            if feat in model_inputs:
+                model_inputs[feat] = -abs(model_inputs[feat])
+                
+        return model_inputs
     
     def predict(self, input_data):
         if self.model is None:
@@ -79,39 +66,20 @@ class LoanDefaultPredictor:
             return 0.5, False
 
         try:
-            input_df = pd.DataFrame([input_data])
+            ordered_data = [input_data.get(f, 0) for f in self.features]
+            input_df = pd.DataFrame([ordered_data], columns=self.features)
 
-            for f in self.features:
-                if f not in input_df.columns:
-                    input_df[f] = 0
+            string_columns = input_df.select_dtypes(include=['object']).columns
 
-            input_df = input_df[self.features]
+            def encode_as_int(x):
+                return abs(hash(str(x))) % 10_000_000  
 
-            for col in input_df.columns:
-                if input_df[col].dtype == 'object' or col in self.cat_mappings:
-                    
-                    if col in self.cat_mappings:
-                        categories = self.cat_mappings[col]
-                        val = input_df.iloc[0][col]
-                        
-                        try:
-                            encoded_val = categories.index(val)
-                        except ValueError:
-                            encoded_val = -1
-                            
-                        input_df[col] = encoded_val
-                    else:
-                        if isinstance(input_df.iloc[0][col], str):
-                             input_df[col] = -1 
+            for col in string_columns:
+                input_df[col] = input_df[col].apply(encode_as_int)
 
             X = input_df.to_numpy(dtype=float)
 
-            if isinstance(self.model, lightgbm.Booster):
-                prob_scores = self.model.predict(X)
-                default_prob = prob_scores[0]
-            else:
-                default_prob = self.model.predict_proba(X)[0][1]
-            
+            default_prob = self.model.predict(X)[0]
             return default_prob, default_prob > 0.5
 
         except Exception as e:
@@ -137,17 +105,15 @@ def main():
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             sk_id_curr = st.number_input("ID (SK_ID_CURR)", value=100001)
-            years_birth = st.number_input("Age (Years)", min_value=18.0, value=30.0) 
-            cnt_fam_members = st.number_input("Family Members", min_value=1.0, value=1.0)
+            years_birth = st.number_input("Age (Years)", min_value=18, value=30)
+            cnt_fam_members = st.number_input("Family Members", min_value=1, value=1)
         with c2:
             years_employed = st.number_input("Years Employed", min_value=0.0, value=2.0)
             years_registration = st.number_input("Years Since Registration", min_value=0.0, value=5.0)
             years_id_publish = st.number_input("Years Since ID Publish", min_value=0.0, value=2.0)
         with c3:
-            occupation = st.selectbox("Occupation Type", 
-                                      ["Laborers", "Sales staff", "Accountants", "Managers", "Drivers", "Core staff", "High skill tech staff", "Medicine staff"])
-            organization = st.selectbox("Organization Type", 
-                                        ["Business Entity Type 3", "Self-employed", "Other", "Government", "Medicine"])
+            occupation = st.text_input("Occupation Type", "Laborers")
+            organization = st.text_input("Organization Type", "Business Entity Type 3")
             years_last_phone = st.number_input("Years Since Phone Change", min_value=0.0, value=1.0)
         with c4:
             weekday_appr = st.selectbox("Weekday of Application", 
@@ -163,7 +129,7 @@ def main():
             annuity = st.number_input("Annuity Amount", value=20000.0)
             goods_price = st.number_input("Goods Price", value=350000.0)
         with c7:
-            own_car_age = st.number_input("Car Age (0 if none)", value=0.0)
+            own_car_age = st.number_input("Car Age (0 if none)", value=0)
             region_pop = st.number_input("Region Population Relative", value=0.0188, format="%.4f")
         with c8:
              amt_req_year = st.number_input("Enquiries to Bureau (Year)", value=1.0)
@@ -182,6 +148,7 @@ def main():
         
         with st.expander("Expand to enter Previous Application History", expanded=True):
             cols_hist = st.columns(4)
+            
             
             with cols_hist[0]:
                 st.markdown("**Previous Amounts**")
@@ -209,19 +176,14 @@ def main():
                 prev_cnt_pay_max = st.number_input("Max Count Payments", value=12.0)
                 prev_seller_area = st.number_input("Seller Place Area Mean", value=50.0)
                 prev_hour_mean = st.number_input("Appr. Hour Mean", value=12.0)
-                prev_sk_id_first = st.number_input("First Previous ID", value=100000.0)
+                prev_sk_id_first = st.number_input("First Previous ID", value=100000)
                 prev_insured = st.number_input("Insured on Approval Max (0/1)", 0.0, 1.0, 0.0)
 
             with cols_hist[3]:
                 st.markdown("**Encoded/Lambda Scores**")
-                prev_prod_comb = st.selectbox("Prev Prod Combination", 
-                                             ["Cash", "POS household with interest", "POS mobile with interest", "Card Street", "XNA"])
-                
-                prev_goods_cat = st.selectbox("Prev Goods Category", 
-                                             ["XNA", "Mobile", "Consumer Electronics", "Computers", "Audio/Video", "Furniture"])
-                
-                prev_weekday_lambda = st.selectbox("Prev Weekday Process", 
-                                                  ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'])
+                prev_prod_comb = st.number_input("Prod Combination (Score)", value=0.0)
+                prev_goods_cat = st.number_input("Goods Category (Score)", value=0.0)
+                prev_weekday_lambda = st.number_input("Weekday Lambda (Score)", value=0.0)
 
         submitted = st.form_submit_button("Predict Default Risk")
 
@@ -274,8 +236,10 @@ def main():
             'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>': prev_weekday_lambda
         }
         
+        final_input = predictor.convert_to_model_format(user_data)
+        
         with st.spinner("Calculating Risk..."):
-            prob, is_default = predictor.predict(user_data)
+            prob, is_default = predictor.predict(final_input)
             
         st.divider()
         st.header("Results")
@@ -286,9 +250,9 @@ def main():
             
         with col_res2:
             if prob < 0.5:
-                st.success(f"**Low/Medium Risk** (Probability: {prob:.2%})")
+                st.success(f"**Low/Medium Risk** (Threshold: 50%)")
             else:
-                st.error(f"**High Risk** (Probability: {prob:.2%})")
+                st.error(f"**High Risk** (Threshold: 50%)")
 
 if __name__ == "__main__":
     main()
