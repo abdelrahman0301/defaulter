@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import warnings
+import lightgbm # <-- NEW IMPORT
 
 # Suppress warnings for cleaner UI
 warnings.filterwarnings('ignore')
@@ -11,7 +12,7 @@ class LoanDefaultPredictor:
     def __init__(self):
         self.model = None
         self.features = None
-        self.cat_mappings = {} # Store correct category-to-integer mappings
+        self.cat_mappings = {} 
         self.load_model()
     
     def load_model(self):
@@ -21,6 +22,11 @@ class LoanDefaultPredictor:
             # 1. Load Feature Names
             if hasattr(self.model, 'feature_name_'):
                 self.features = self.model.feature_name_
+            
+            # If the model is the raw Booster, we must rely on its feature names
+            elif isinstance(self.model, lightgbm.Booster):
+                self.features = self.model.feature_name()
+                
             else:
                 # Fallback list if feature names aren't in the object
                 self.features = [
@@ -46,19 +52,26 @@ class LoanDefaultPredictor:
                 ]
             
             # 2. Extract Category Mappings (Critical Fix for Hashing Issue)
-            # This attempts to get the exact integer mapping from the trained LightGBM model
             try:
+                # Check if it is the sklearn wrapper (has booster_ attribute)
                 if hasattr(self.model, 'booster_'):
+                    booster = self.model.booster_
+                # Check if it is the raw Booster object itself
+                elif isinstance(self.model, lightgbm.Booster):
+                    booster = self.model
+                else:
+                    booster = None
+
+                if booster and hasattr(booster, 'pandas_categorical'):
                     # Access the internal LightGBM booster to find category lists
                     self.cat_mappings = {
                         name: list(cats) 
                         for name, cats in zip(
-                            self.model.booster_.feature_name(), 
-                            self.model.booster_.pandas_categorical
+                            booster.feature_name(), 
+                            booster.pandas_categorical
                         )
                     }
             except Exception as e:
-                # If extraction fails, we will handle it gracefully in predict
                 print(f"Warning: Could not extract specific category mappings. {e}")
             
             st.success("✅ Credit Default Risk Model loaded successfully!")
@@ -66,6 +79,10 @@ class LoanDefaultPredictor:
         except FileNotFoundError:
             st.error("❌ Model file 'LoanDefaulter_LightGBM.pkl' not found. Please upload it.")
             self.model = None
+    
+    # We remove this empty function
+    # def convert_to_model_format(self, inputs):
+    #     return inputs.copy()
     
     def predict(self, input_data):
         if self.model is None:
@@ -85,13 +102,10 @@ class LoanDefaultPredictor:
             input_df = input_df[self.features]
 
             # --- CRITICAL FIX: Categorical Encoding ---
-            # Instead of hashing, we map the string to the integer the model expects.
             for col in input_df.columns:
-                # Check if this column needs encoding (is text or was categorical in training)
                 if input_df[col].dtype == 'object' or col in self.cat_mappings:
                     
                     if col in self.cat_mappings:
-                        # We have the exact list from the model (e.g., ['Accountants', 'Laborers'...])
                         categories = self.cat_mappings[col]
                         val = input_df.iloc[0][col]
                         
@@ -104,17 +118,21 @@ class LoanDefaultPredictor:
                             
                         input_df[col] = encoded_val
                     else:
-                        # Fallback if we don't have the mapping: simple factorization
-                        # (This is safer than hashing but less accurate than the mapping above)
+                        # Fallback if we don't have the mapping: assume missing/unknown
                         if isinstance(input_df.iloc[0][col], str):
                              input_df[col] = -1 
 
             # Convert to float numpy array
             X = input_df.to_numpy(dtype=float)
 
-            # Use predict_proba to get the actual probability (0.0 to 1.0)
-            # [0][1] gets the probability of Class 1 (Default)
-            default_prob = self.model.predict_proba(X)[0][1]
+            # --- CRITICAL FIX: Handling Booster vs LGBMClassifier Prediction ---
+            if isinstance(self.model, lightgbm.Booster):
+                # Raw Booster uses .predict() to return probability scores for binary objective
+                prob_scores = self.model.predict(X)
+                default_prob = prob_scores[0]
+            else:
+                # Scikit-learn wrapper uses .predict_proba()
+                default_prob = self.model.predict_proba(X)[0][1]
             
             return default_prob, default_prob > 0.5
 
@@ -141,7 +159,7 @@ def main():
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             sk_id_curr = st.number_input("ID (SK_ID_CURR)", value=100001)
-            # FIX: Training data uses positive float years (e.g. 25.5), do not convert to negative later
+            # FIX: Training data uses positive float years, do not convert to negative later
             years_birth = st.number_input("Age (Years)", min_value=18.0, value=30.0) 
             cnt_fam_members = st.number_input("Family Members", min_value=1.0, value=1.0)
         with c2:
@@ -283,8 +301,6 @@ def main():
             'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>': prev_weekday_lambda
         }
         
-        # We no longer need to "convert" inputs to negative, passing raw user_data
-        
         with st.spinner("Calculating Risk..."):
             prob, is_default = predictor.predict(user_data)
             
@@ -296,7 +312,6 @@ def main():
             st.metric("Default Probability", f"{prob:.2%}", delta_color="inverse")
             
         with col_res2:
-            # Threshold set to 50% usually, or adjust based on business logic (e.g., 0.10 for strictly low risk)
             if prob < 0.5:
                 st.success(f"**Low/Medium Risk** (Probability: {prob:.2%})")
             else:
