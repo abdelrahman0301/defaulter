@@ -139,7 +139,7 @@ class LoanDefaultPredictor:
 
             X = input_df.to_numpy(dtype=float)
 
-            default_prob = self.model.predict_proba(X)[0][1]
+            default_prob = self.model.predict(X)[0]
             return default_prob, default_prob > 0.5
 
         except Exception as e:
@@ -238,19 +238,4 @@ def main():
             st.metric(label="Risk Assessment", value=status)
         
         st.subheader("Risk Interpretation")
-        if default_prob < 0.3:
-            st.success("**LOW RISK**: This applicant shows strong creditworthiness with low probability of default.")
-        elif default_prob < 0.6:
-            st.warning("**MEDIUM RISK**: This applicant has moderate risk factors. Additional review recommended.")
-        else:
-            st.error("**HIGH RISK**: This applicant shows significant risk factors for default.")
-        
-        with st.expander("Technical Details"):
-            st.write("Model received these key values:")
-            st.write(f"- Age (YEARS_BIRTH): {input_data['YEARS_BIRTH']} years")
-            st.write(f"- Employment (YEARS_EMPLOYED): {input_data['YEARS_EMPLOYED']} years")
-            st.write(f"- External Score 2: {ext_source_2:.3f}")
-            st.write(f"- External Score 3: {ext_source_3:.3f}")
-
-if __name__ == "__main__":
-    main()
+        if default_prob
