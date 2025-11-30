@@ -46,79 +46,19 @@ class LoanDefaultPredictor:
             st.error("❌ Model file 'LoanDefaulter_LightGBM.pkl' not found.")
             self.model = None
     
-    def convert_to_model_format(self, user_inputs):
-        model_inputs = self.get_default_inputs()
+    def convert_to_model_format(self, inputs):
         
-        model_inputs['YEARS_BIRTH'] = -user_inputs['age']
-        model_inputs['YEARS_EMPLOYED'] = -user_inputs['employment_length']
+        model_inputs = inputs.copy()
         
-        model_inputs.update({
-            'AMT_INCOME_TOTAL': user_inputs['income_total'],
-            'AMT_CREDIT': user_inputs['credit_amt'],
-            'AMT_ANNUITY': user_inputs['annuity_amt'],
-            'AMT_GOODS_PRICE': user_inputs['goods_price'],
-            'CNT_FAM_MEMBERS': user_inputs['cnt_fam_members'],
-            'EXT_SOURCE_2': user_inputs['ext_source_2'],
-            'EXT_SOURCE_3': user_inputs['ext_source_3'],
-            'OBS_30_CNT_SOCIAL_CIRCLE': user_inputs['obs_30_cnt'],
-            'AMT_REQ_CREDIT_BUREAU_YEAR': user_inputs['amt_req_year'],
-            'OWN_CAR_AGE': user_inputs['own_car_age'],
-            'HOUR_APPR_PROCESS_START': user_inputs['hour_appr_process_start'],
-            'OBS_60_CNT_SOCIAL_CIRCLE': user_inputs['obs_60_cnt'],
-        })
-        
+        time_features = [
+            'YEARS_BIRTH', 'YEARS_EMPLOYED', 'YEARS_REGISTRATION', 
+            'YEARS_ID_PUBLISH', 'YEARS_LAST_PHONE_CHANGE'
+        ]
+        for feat in time_features:
+            if feat in model_inputs:
+                model_inputs[feat] = -abs(model_inputs[feat])
+                
         return model_inputs
-    
-    def get_default_inputs(self):
-        defaults = {}
-        
-        defaults['ORGANIZATION_TYPE'] = 'Business Entity Type 3'
-        defaults['EXT_SOURCE_3'] = 0.5
-        defaults['EXT_SOURCE_2'] = 0.5
-        defaults['YEARS_ID_PUBLISH'] = -3
-        defaults['YEARS_EMPLOYED'] = -5
-        defaults['YEARS_REGISTRATION'] = -10
-        defaults['YEARS_BIRTH'] = -40
-        defaults['AMT_ANNUITY'] = 25000
-        defaults['SK_ID_CURR'] = 300000
-        defaults['REGION_POPULATION_RELATIVE'] = 0.02
-        defaults['YEARS_LAST_PHONE_CHANGE'] = -2
-        defaults['PREV_SELLERPLACE_AREA_MEAN'] = 10
-        defaults['PREV_YEARS_DECISION_MEAN'] = -1
-        defaults['AMT_CREDIT'] = 500000
-        defaults['PREV_HOUR_APPR_PROCESS_START_MEAN'] = 10
-        defaults['PREV_YEARS_FIRST_DUE_MEAN'] = -1
-        defaults['PREV_CNT_PAYMENT_MAX'] = 36
-        defaults['AMT_INCOME_TOTAL'] = 150000
-        defaults['AMT_GOODS_PRICE'] = 450000
-        defaults['PREV_AMT_ANNUITY_MEAN'] = 20000
-        defaults['PREV_YEARS_LAST_DUE_1ST_VERSION_MEAN'] = -1
-        defaults['PREV_AMT_ANNUITY_MEDIAN'] = 20000
-        defaults['PREV_SK_ID_PREV_COUNT'] = 1
-        defaults['PREV_YEARS_TERMINATION_MEAN'] = -1
-        defaults['PREV_AMT_CREDIT_MEDIAN'] = 400000
-        defaults['AMT_REQ_CREDIT_BUREAU_YEAR'] = 1
-        defaults['PREV_YEARS_LAST_DUE_MEAN'] = -1
-        defaults['OCCUPATION_TYPE'] = 'Laborers'
-        defaults['PREV_AMT_APPLICATION_MEDIAN'] = 400000
-        defaults['PREV_PRODUCT_COMBINATION_<LAMBDA>'] = 0
-        defaults['PREV_AMT_CREDIT_MEAN'] = 400000
-        defaults['CNT_FAM_MEMBERS'] = 2
-        defaults['OBS_30_CNT_SOCIAL_CIRCLE'] = 2
-        defaults['OWN_CAR_AGE'] = 0
-        defaults['PREV_AMT_APPLICATION_MEAN'] = 400000
-        defaults['PREV_AMT_GOODS_PRICE_MEDIAN'] = 350000
-        defaults['HOUR_APPR_PROCESS_START'] = 10
-        defaults['PREV_AMT_GOODS_PRICE_MEAN'] = 350000
-        defaults['PREV_YEARS_FIRST_DRAWING_MEAN'] = -1
-        defaults['PREV_SK_ID_CURR_FIRST'] = 299999
-        defaults['OBS_60_CNT_SOCIAL_CIRCLE'] = 2
-        defaults['PREV_NAME_GOODS_CATEGORY_<LAMBDA>'] = 0
-        defaults['PREV_NFLAG_INSURED_ON_APPROVAL_MAX'] = 0
-        defaults['WEEKDAY_APPR_PROCESS_START'] = 'WEDNESDAY'
-        defaults['PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>'] = 0
-        
-        return defaults
     
     def predict(self, input_data):
         if self.model is None:
@@ -152,105 +92,167 @@ def main():
     st.set_page_config(page_title="Credit Default Risk Prediction", page_icon="💵", layout="wide")
     
     st.title("💵 Credit Default Risk Prediction")
-    st.markdown("Predict the likelihood of loan default based on applicant data")
+    st.markdown("Predict the likelihood of loan default. Please fill in all applicant details below.")
     
     predictor = LoanDefaultPredictor()
     
     if predictor.model is None:
-        st.warning("Running in demo mode with sample data")
-    
-    user_inputs = None
-    input_data = None
+        st.warning("Running in demo mode without model file.")
     
     with st.form("loan_application"):
-        st.header("Applicant Information")
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.subheader("Financial Information")
-            income_total = st.number_input("Total Income (AMT_INCOME_TOTAL)", min_value=0, value=150000, step=1000)
-            credit_amt = st.number_input("Credit Amount (AMT_CREDIT)", min_value=0, value=500000, step=1000)
-            annuity_amt = st.number_input("Annuity Amount (AMT_ANNUITY)", min_value=0, value=25000, step=100)
-            goods_price = st.number_input("Goods Price (AMT_GOODS_PRICE)", min_value=0, value=450000, step=1000)
+        st.header("1. Personal & Employment Details")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            sk_id_curr = st.number_input("ID (SK_ID_CURR)", value=100001)
+            years_birth = st.number_input("Age (Years)", min_value=18, value=30)
+            cnt_fam_members = st.number_input("Family Members", min_value=1, value=1)
+        with c2:
+            years_employed = st.number_input("Years Employed", min_value=0.0, value=2.0)
+            years_registration = st.number_input("Years Since Registration", min_value=0.0, value=5.0)
+            years_id_publish = st.number_input("Years Since ID Publish", min_value=0.0, value=2.0)
+        with c3:
+            occupation = st.text_input("Occupation Type", "Laborers")
+            organization = st.text_input("Organization Type", "Business Entity Type 3")
+            years_last_phone = st.number_input("Years Since Phone Change", min_value=0.0, value=1.0)
+        with c4:
+            weekday_appr = st.selectbox("Weekday of Application", 
+                                        ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'])
+            hour_appr = st.number_input("Hour of Application", 0, 23, 10)
+
+        st.header("2. Financial Information")
+        c5, c6, c7, c8 = st.columns(4)
+        with c5:
+            income = st.number_input("Total Income", value=150000.0)
+            credit = st.number_input("Credit Amount", value=400000.0)
+        with c6:
+            annuity = st.number_input("Annuity Amount", value=20000.0)
+            goods_price = st.number_input("Goods Price", value=350000.0)
+        with c7:
+            own_car_age = st.number_input("Car Age (0 if none)", value=0)
+            region_pop = st.number_input("Region Population Relative", value=0.0188, format="%.4f")
+        with c8:
+             amt_req_year = st.number_input("Enquiries to Bureau (Year)", value=1.0)
+
+        st.header("3. External Scores & Social")
+        c9, c10, c11 = st.columns(3)
+        with c9:
+            ext2 = st.slider("External Source 2", 0.0, 1.0, 0.5)
+            ext3 = st.slider("External Source 3", 0.0, 1.0, 0.5)
+        with c10:
+            obs_30 = st.number_input("Obs. 30 Social Circle", value=0.0)
+            obs_60 = st.number_input("Obs. 60 Social Circle", value=0.0)
             
-        with col2:
-            st.subheader("Personal Details")
-            cnt_fam_members = st.number_input("Family Members (CNT_FAM_MEMBERS)", min_value=1, value=2)
-            age = st.number_input("Age (Years)", min_value=18, max_value=100, value=40)
-            employment_length = st.number_input("Years Employed", min_value=0, max_value=50, value=5)
-            own_car_age = st.number_input("Car Age (OWN_CAR_AGE)", min_value=0, value=0)
-            
-        with col3:
-            st.subheader("External & Social")
-            ext_source_2 = st.slider("External Source 2 (EXT_SOURCE_2)", 0.0, 1.0, 0.5, 0.01)
-            ext_source_3 = st.slider("External Source 3 (EXT_SOURCE_3)", 0.0, 1.0, 0.5, 0.01)
-            obs_30_cnt = st.number_input("Social Circle 30 (OBS_30_CNT)", min_value=0, value=2)
-            obs_60_cnt = st.number_input("Social Circle 60 (OBS_60_CNT)", min_value=0, value=2)
-            amt_req_year = st.number_input("Credit Bureau Reqs/Year", min_value=0, value=1)
-            hour_appr_process_start = st.number_input("Appr. Hour", min_value=0, max_value=23, value=10)
+        st.header("4. History & Aggregated Data")
+        st.info("Aggregated statistics from previous loan applications.")
         
+        with st.expander("Expand to enter Previous Application History", expanded=True):
+            cols_hist = st.columns(4)
+            
+            
+            with cols_hist[0]:
+                st.markdown("**Previous Amounts**")
+                prev_cred_mean = st.number_input("Prev Credit Mean", value=100000.0)
+                prev_cred_med = st.number_input("Prev Credit Median", value=100000.0)
+                prev_app_mean = st.number_input("Prev App Amount Mean", value=100000.0)
+                prev_app_med = st.number_input("Prev App Amount Median", value=100000.0)
+                prev_ann_mean = st.number_input("Prev Annuity Mean", value=10000.0)
+                prev_ann_med = st.number_input("Prev Annuity Median", value=10000.0)
+                prev_goods_mean = st.number_input("Prev Goods Mean", value=100000.0)
+                prev_goods_med = st.number_input("Prev Goods Median", value=100000.0)
+
+            with cols_hist[1]:
+                st.markdown("**Previous Timing (Means)**")
+                prev_dec_mean = st.number_input("Years Decision Mean", value=-1.0)
+                prev_first_draw = st.number_input("Years First Draw Mean", value=365243.0) 
+                prev_first_due = st.number_input("Years First Due Mean", value=-1.0)
+                prev_last_due_1st = st.number_input("Years Last Due 1st Ver.", value=-1.0)
+                prev_last_due = st.number_input("Years Last Due Mean", value=-1.0)
+                prev_term = st.number_input("Years Termination Mean", value=-1.0)
+
+            with cols_hist[2]:
+                st.markdown("**Previous Counts & Logic**")
+                prev_count = st.number_input("Previous Apps Count", value=1.0)
+                prev_cnt_pay_max = st.number_input("Max Count Payments", value=12.0)
+                prev_seller_area = st.number_input("Seller Place Area Mean", value=50.0)
+                prev_hour_mean = st.number_input("Appr. Hour Mean", value=12.0)
+                prev_sk_id_first = st.number_input("First Previous ID", value=100000)
+                prev_insured = st.number_input("Insured on Approval Max (0/1)", 0.0, 1.0, 0.0)
+
+            with cols_hist[3]:
+                st.markdown("**Encoded/Lambda Scores**")
+                prev_prod_comb = st.number_input("Prod Combination (Score)", value=0.0)
+                prev_goods_cat = st.number_input("Goods Category (Score)", value=0.0)
+                prev_weekday_lambda = st.number_input("Weekday Lambda (Score)", value=0.0)
+
         submitted = st.form_submit_button("Predict Default Risk")
+
+    if submitted:
+        user_data = {
+            'ORGANIZATION_TYPE': organization,
+            'EXT_SOURCE_3': ext3,
+            'EXT_SOURCE_2': ext2,
+            'YEARS_ID_PUBLISH': years_id_publish, 
+            'YEARS_EMPLOYED': years_employed,     
+            'YEARS_REGISTRATION': years_registration, 
+            'YEARS_BIRTH': years_birth,         
+            'AMT_ANNUITY': annuity,
+            'SK_ID_CURR': sk_id_curr,
+            'REGION_POPULATION_RELATIVE': region_pop,
+            'YEARS_LAST_PHONE_CHANGE': years_last_phone, 
+            'PREV_SELLERPLACE_AREA_MEAN': prev_seller_area,
+            'PREV_YEARS_DECISION_MEAN': prev_dec_mean,
+            'AMT_CREDIT': credit,
+            'PREV_HOUR_APPR_PROCESS_START_MEAN': prev_hour_mean,
+            'PREV_YEARS_FIRST_DUE_MEAN': prev_first_due,
+            'PREV_CNT_PAYMENT_MAX': prev_cnt_pay_max,
+            'AMT_INCOME_TOTAL': income,
+            'AMT_GOODS_PRICE': goods_price,
+            'PREV_AMT_ANNUITY_MEAN': prev_ann_mean,
+            'PREV_YEARS_LAST_DUE_1ST_VERSION_MEAN': prev_last_due_1st,
+            'PREV_AMT_ANNUITY_MEDIAN': prev_ann_med,
+            'PREV_SK_ID_PREV_COUNT': prev_count,
+            'PREV_YEARS_TERMINATION_MEAN': prev_term,
+            'PREV_AMT_CREDIT_MEDIAN': prev_cred_med,
+            'AMT_REQ_CREDIT_BUREAU_YEAR': amt_req_year,
+            'PREV_YEARS_LAST_DUE_MEAN': prev_last_due,
+            'OCCUPATION_TYPE': occupation,
+            'PREV_AMT_APPLICATION_MEDIAN': prev_app_med,
+            'PREV_PRODUCT_COMBINATION_<LAMBDA>': prev_prod_comb,
+            'PREV_AMT_CREDIT_MEAN': prev_cred_mean,
+            'CNT_FAM_MEMBERS': cnt_fam_members,
+            'OBS_30_CNT_SOCIAL_CIRCLE': obs_30,
+            'OWN_CAR_AGE': own_car_age,
+            'PREV_AMT_APPLICATION_MEAN': prev_app_mean,
+            'PREV_AMT_GOODS_PRICE_MEDIAN': prev_goods_med,
+            'HOUR_APPR_PROCESS_START': hour_appr,
+            'PREV_AMT_GOODS_PRICE_MEAN': prev_goods_mean,
+            'PREV_YEARS_FIRST_DRAWING_MEAN': prev_first_draw,
+            'PREV_SK_ID_CURR_FIRST': prev_sk_id_first,
+            'OBS_60_CNT_SOCIAL_CIRCLE': obs_60,
+            'PREV_NAME_GOODS_CATEGORY_<LAMBDA>': prev_goods_cat,
+            'PREV_NFLAG_INSURED_ON_APPROVAL_MAX': prev_insured,
+            'WEEKDAY_APPR_PROCESS_START': weekday_appr,
+            'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>': prev_weekday_lambda
+        }
         
-        if submitted:
-            user_inputs = {
-                'income_total': income_total,
-                'credit_amt': credit_amt,
-                'annuity_amt': annuity_amt,
-                'goods_price': goods_price,
-                'cnt_fam_members': cnt_fam_members,
-                'age': age,
-                'employment_length': employment_length,
-                'own_car_age': own_car_age,
-                'ext_source_2': ext_source_2,
-                'ext_source_3': ext_source_3,
-                'obs_30_cnt': obs_30_cnt,
-                'obs_60_cnt': obs_60_cnt,
-                'amt_req_year': amt_req_year,
-                'hour_appr_process_start': hour_appr_process_start
-            }
-    
-    if submitted and user_inputs is not None:
-        input_data = predictor.convert_to_model_format(user_inputs)
+        final_input = predictor.convert_to_model_format(user_data)
         
-        with st.spinner("Analyzing application..."):
-            default_prob, will_default = predictor.predict(input_data)
-        
-        st.header("Prediction Results")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.metric(
-                label="Default Probability", 
-                value=f"{default_prob:.1%}",
-                delta=f"{(default_prob - 0.5):.1%}" if default_prob > 0.5 else f"{(0.5 - default_prob):.1%}",
-                delta_color="inverse"
-            )
+        with st.spinner("Calculating Risk..."):
+            prob, is_default = predictor.predict(final_input)
             
-        with col2:
-            if default_prob < 0.3:
-                status = "Low Risk ✅"
-            elif default_prob < 0.6:
-                status = "Medium Risk ⚠️"
+        st.divider()
+        st.header("Results")
+        col_res1, col_res2 = st.columns(2)
+        
+        with col_res1:
+            st.metric("Default Probability", f"{prob:.2%}", delta_color="inverse")
+            
+        with col_res2:
+            if prob < 0.5:
+                st.success(f"**Low/Medium Risk** (Threshold: 50%)")
             else:
-                status = "High Risk ❌"
-            st.metric(label="Risk Assessment", value=status)
-        
-        st.subheader("Risk Interpretation")
-        if default_prob < 0.3:
-            st.success("**LOW RISK**: This applicant shows strong creditworthiness with low probability of default.")
-        elif default_prob < 0.6:
-            st.warning("**MEDIUM RISK**: This applicant has moderate risk factors. Additional review recommended.")
-        else:
-            st.error("**HIGH RISK**: This applicant shows significant risk factors for default.")
-        
-        with st.expander("Technical Details"):
-            st.write("Model received these key values:")
-            st.write(f"- Age (YEARS_BIRTH): {input_data['YEARS_BIRTH']} years")
-            st.write(f"- Employment (YEARS_EMPLOYED): {input_data['YEARS_EMPLOYED']} years")
-            st.write(f"- External Score 2: {ext_source_2:.3f}")
-            st.write(f"- External Score 3: {ext_source_3:.3f}")
+                st.error(f"**High Risk** (Threshold: 50%)")
 
 if __name__ == "__main__":
     main()
