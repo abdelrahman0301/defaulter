@@ -19,41 +19,25 @@ class LoanDefaultPredictor:
                 self.features = self.model.feature_name_
             else:
                 self.features = [
-                    'SK_ID_CURR', 'NAME_CONTRACT_TYPE', 'CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-                    'CNT_CHILDREN', 'AMT_INCOME_TOTAL', 'AMT_CREDIT', 'AMT_ANNUITY', 'AMT_GOODS_PRICE',
-                    'NAME_TYPE_SUITE', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS',
-                    'NAME_HOUSING_TYPE', 'REGION_POPULATION_RELATIVE', 'OWN_CAR_AGE', 'FLAG_MOBIL',
-                    'FLAG_EMP_PHONE', 'FLAG_WORK_PHONE', 'FLAG_CONT_MOBILE', 'FLAG_PHONE', 'FLAG_EMAIL',
-                    'OCCUPATION_TYPE', 'CNT_FAM_MEMBERS', 'REGION_RATING_CLIENT', 'REGION_RATING_CLIENT_W_CITY',
-                    'WEEKDAY_APPR_PROCESS_START', 'HOUR_APPR_PROCESS_START', 'REG_REGION_NOT_LIVE_REGION',
-                    'REG_REGION_NOT_WORK_REGION', 'LIVE_REGION_NOT_WORK_REGION', 'REG_CITY_NOT_LIVE_CITY',
-                    'REG_CITY_NOT_WORK_CITY', 'LIVE_CITY_NOT_WORK_CITY', 'ORGANIZATION_TYPE', 'EXT_SOURCE_2',
-                    'EXT_SOURCE_3', 'OBS_30_CNT_SOCIAL_CIRCLE', 'DEF_30_CNT_SOCIAL_CIRCLE',
-                    'OBS_60_CNT_SOCIAL_CIRCLE', 'DEF_60_CNT_SOCIAL_CIRCLE', 'FLAG_DOCUMENT_2',
-                    'FLAG_DOCUMENT_3', 'FLAG_DOCUMENT_4', 'FLAG_DOCUMENT_5', 'FLAG_DOCUMENT_6',
-                    'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_8', 'FLAG_DOCUMENT_9', 'FLAG_DOCUMENT_10',
-                    'FLAG_DOCUMENT_11', 'FLAG_DOCUMENT_12', 'FLAG_DOCUMENT_13', 'FLAG_DOCUMENT_14',
-                    'FLAG_DOCUMENT_15', 'FLAG_DOCUMENT_16', 'FLAG_DOCUMENT_17', 'FLAG_DOCUMENT_18',
-                    'FLAG_DOCUMENT_19', 'FLAG_DOCUMENT_20', 'FLAG_DOCUMENT_21', 'AMT_REQ_CREDIT_BUREAU_HOUR',
-                    'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_WEEK', 'AMT_REQ_CREDIT_BUREAU_MON',
-                    'AMT_REQ_CREDIT_BUREAU_QRT', 'AMT_REQ_CREDIT_BUREAU_YEAR', 'YEARS_BIRTH',
-                    'YEARS_EMPLOYED', 'YEARS_REGISTRATION', 'YEARS_ID_PUBLISH', 'YEARS_LAST_PHONE_CHANGE',
-                    'PREV_SK_ID_PREV_COUNT', 'PREV_SK_ID_CURR_FIRST', 'PREV_AMT_ANNUITY_MEAN',
-                    'PREV_AMT_ANNUITY_MEDIAN', 'PREV_AMT_APPLICATION_MEAN', 'PREV_AMT_APPLICATION_MEDIAN',
-                    'PREV_AMT_CREDIT_MEAN', 'PREV_AMT_CREDIT_MEDIAN', 'PREV_AMT_GOODS_PRICE_MEAN',
-                    'PREV_AMT_GOODS_PRICE_MEDIAN', 'PREV_NAME_CONTRACT_TYPE_<LAMBDA>',
-                    'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>', 'PREV_NAME_CASH_LOAN_PURPOSE_<LAMBDA>',
-                    'PREV_NAME_CONTRACT_STATUS_<LAMBDA>', 'PREV_NAME_PAYMENT_TYPE_<LAMBDA>',
-                    'PREV_CODE_REJECT_REASON_<LAMBDA>', 'PREV_NAME_CLIENT_TYPE_<LAMBDA>',
-                    'PREV_NAME_GOODS_CATEGORY_<LAMBDA>', 'PREV_NAME_PORTFOLIO_<LAMBDA>',
-                    'PREV_NAME_PRODUCT_TYPE_<LAMBDA>', 'PREV_CHANNEL_TYPE_<LAMBDA>',
-                    'PREV_NAME_SELLER_INDUSTRY_<LAMBDA>', 'PREV_NAME_YIELD_GROUP_<LAMBDA>',
-                    'PREV_PRODUCT_COMBINATION_<LAMBDA>', 'PREV_NFLAG_LAST_APPL_IN_DAY_MAX',
-                    'PREV_NFLAG_INSURED_ON_APPROVAL_MAX', 'PREV_CNT_PAYMENT_MAX',
-                    'PREV_HOUR_APPR_PROCESS_START_MEAN', 'PREV_SELLERPLACE_AREA_MEAN',
-                    'PREV_YEARS_DECISION_MEAN', 'PREV_YEARS_FIRST_DRAWING_MEAN',
-                    'PREV_YEARS_FIRST_DUE_MEAN', 'PREV_YEARS_LAST_DUE_1ST_VERSION_MEAN',
-                    'PREV_YEARS_LAST_DUE_MEAN', 'PREV_YEARS_TERMINATION_MEAN'
+                    'ORGANIZATION_TYPE', 'EXT_SOURCE_3', 'EXT_SOURCE_2', 'YEARS_ID_PUBLISH', 
+                    'YEARS_EMPLOYED', 'YEARS_REGISTRATION', 'YEARS_BIRTH', 'AMT_ANNUITY', 
+                    'SK_ID_CURR', 'REGION_POPULATION_RELATIVE', 'YEARS_LAST_PHONE_CHANGE', 
+                    'PREV_SELLERPLACE_AREA_MEAN', 'PREV_YEARS_DECISION_MEAN', 'AMT_CREDIT', 
+                    'PREV_HOUR_APPR_PROCESS_START_MEAN', 'PREV_YEARS_FIRST_DUE_MEAN', 
+                    'PREV_CNT_PAYMENT_MAX', 'AMT_INCOME_TOTAL', 'AMT_GOODS_PRICE', 
+                    'PREV_AMT_ANNUITY_MEAN', 'PREV_YEARS_LAST_DUE_1ST_VERSION_MEAN', 
+                    'PREV_AMT_ANNUITY_MEDIAN', 'PREV_SK_ID_PREV_COUNT', 
+                    'PREV_YEARS_TERMINATION_MEAN', 'PREV_AMT_CREDIT_MEDIAN', 
+                    'AMT_REQ_CREDIT_BUREAU_YEAR', 'PREV_YEARS_LAST_DUE_MEAN', 
+                    'OCCUPATION_TYPE', 'PREV_AMT_APPLICATION_MEDIAN', 
+                    'PREV_PRODUCT_COMBINATION_<LAMBDA>', 'PREV_AMT_CREDIT_MEAN', 
+                    'CNT_FAM_MEMBERS', 'OBS_30_CNT_SOCIAL_CIRCLE', 'OWN_CAR_AGE', 
+                    'PREV_AMT_APPLICATION_MEAN', 'PREV_AMT_GOODS_PRICE_MEDIAN', 
+                    'HOUR_APPR_PROCESS_START', 'PREV_AMT_GOODS_PRICE_MEAN', 
+                    'PREV_YEARS_FIRST_DRAWING_MEAN', 'PREV_SK_ID_CURR_FIRST', 
+                    'OBS_60_CNT_SOCIAL_CIRCLE', 'PREV_NAME_GOODS_CATEGORY_<LAMBDA>', 
+                    'PREV_NFLAG_INSURED_ON_APPROVAL_MAX', 'WEEKDAY_APPR_PROCESS_START', 
+                    'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>'
                 ]
             
             st.success("✅ Credit Default Risk Model loaded successfully!")
@@ -73,28 +57,14 @@ class LoanDefaultPredictor:
             'AMT_CREDIT': user_inputs['credit_amt'],
             'AMT_ANNUITY': user_inputs['annuity_amt'],
             'AMT_GOODS_PRICE': user_inputs['goods_price'],
-            'CNT_CHILDREN': user_inputs['cnt_children'],
             'CNT_FAM_MEMBERS': user_inputs['cnt_fam_members'],
             'EXT_SOURCE_2': user_inputs['ext_source_2'],
             'EXT_SOURCE_3': user_inputs['ext_source_3'],
-            'REGION_RATING_CLIENT': user_inputs['region_rating'],
             'OBS_30_CNT_SOCIAL_CIRCLE': user_inputs['obs_30_cnt'],
-            'DEF_30_CNT_SOCIAL_CIRCLE': user_inputs['def_30_cnt'],
             'AMT_REQ_CREDIT_BUREAU_YEAR': user_inputs['amt_req_year'],
-            'NAME_CONTRACT_TYPE': user_inputs['contract_type'],
-            'CODE_GENDER': user_inputs['gender'],
-            'NAME_EDUCATION_TYPE': user_inputs['education'],
-            'FLAG_OWN_CAR': user_inputs['flag_own_car'],
-            'FLAG_OWN_REALTY': user_inputs['flag_own_realty'],
             'OWN_CAR_AGE': user_inputs['own_car_age'],
-            'FLAG_WORK_PHONE': user_inputs['flag_work_phone'],
-            'FLAG_PHONE': user_inputs['flag_phone'],
-            'FLAG_EMAIL': user_inputs['flag_email'],
-            'REGION_RATING_CLIENT_W_CITY': user_inputs['region_rating_w_city'],
             'HOUR_APPR_PROCESS_START': user_inputs['hour_appr_process_start'],
             'OBS_60_CNT_SOCIAL_CIRCLE': user_inputs['obs_60_cnt'],
-            'DEF_60_CNT_SOCIAL_CIRCLE': user_inputs['def_60_cnt'],
-            'AMT_REQ_CREDIT_BUREAU_MON': user_inputs['amt_req_mon'],
         })
         
         return model_inputs
@@ -102,113 +72,51 @@ class LoanDefaultPredictor:
     def get_default_inputs(self):
         defaults = {}
         
-        defaults['SK_ID_CURR'] = 300000
-        defaults['CNT_CHILDREN'] = 0
-        defaults['AMT_INCOME_TOTAL'] = 150000
-        defaults['AMT_CREDIT'] = 500000
-        defaults['AMT_ANNUITY'] = 25000
-        defaults['AMT_GOODS_PRICE'] = 450000
-        defaults['NAME_CONTRACT_TYPE'] = 'Cash loans'
-        defaults['CODE_GENDER'] = 'F'
-        defaults['FLAG_OWN_CAR'] = 'N'
-        defaults['FLAG_OWN_REALTY'] = 'Y'
-        
-        defaults['NAME_TYPE_SUITE'] = 'Unaccompanied'
-        defaults['NAME_INCOME_TYPE'] = 'Working'
-        defaults['NAME_EDUCATION_TYPE'] = 'Secondary / secondary special'
-        defaults['NAME_FAMILY_STATUS'] = 'Married'
-        defaults['NAME_HOUSING_TYPE'] = 'House / apartment'
-        defaults['REGION_POPULATION_RELATIVE'] = 0.02
-        defaults['OWN_CAR_AGE'] = 0
-        defaults['CNT_FAM_MEMBERS'] = 2
-        
-        defaults['FLAG_MOBIL'] = 1
-        defaults['FLAG_EMP_PHONE'] = 1
-        defaults['FLAG_WORK_PHONE'] = 0
-        defaults['FLAG_CONT_MOBILE'] = 1
-        defaults['FLAG_PHONE'] = 1
-        defaults['FLAG_EMAIL'] = 0
-        
-        defaults['OCCUPATION_TYPE'] = 'Laborers'
-        defaults['REGION_RATING_CLIENT'] = 2
-        defaults['REGION_RATING_CLIENT_W_CITY'] = 2
-        
-        defaults['WEEKDAY_APPR_PROCESS_START'] = 'WEDNESDAY'
-        defaults['HOUR_APPR_PROCESS_START'] = 10
-        
-        defaults['REG_REGION_NOT_LIVE_REGION'] = 0
-        defaults['REG_REGION_NOT_WORK_REGION'] = 0
-        defaults['LIVE_REGION_NOT_WORK_REGION'] = 0
-        defaults['REG_CITY_NOT_LIVE_CITY'] = 0
-        defaults['REG_CITY_NOT_WORK_CITY'] = 0
-        defaults['LIVE_CITY_NOT_WORK_CITY'] = 0
-        
         defaults['ORGANIZATION_TYPE'] = 'Business Entity Type 3'
-        
-        defaults['EXT_SOURCE_2'] = 0.5
         defaults['EXT_SOURCE_3'] = 0.5
-        
-        defaults['OBS_30_CNT_SOCIAL_CIRCLE'] = 2
-        defaults['DEF_30_CNT_SOCIAL_CIRCLE'] = 0
-        defaults['OBS_60_CNT_SOCIAL_CIRCLE'] = 2
-        defaults['DEF_60_CNT_SOCIAL_CIRCLE'] = 0
-        
-        doc_flags = ['FLAG_DOCUMENT_2', 'FLAG_DOCUMENT_3', 'FLAG_DOCUMENT_4', 'FLAG_DOCUMENT_5',
-                    'FLAG_DOCUMENT_6', 'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_8', 'FLAG_DOCUMENT_9',
-                    'FLAG_DOCUMENT_10', 'FLAG_DOCUMENT_11', 'FLAG_DOCUMENT_12', 'FLAG_DOCUMENT_13',
-                    'FLAG_DOCUMENT_14', 'FLAG_DOCUMENT_15', 'FLAG_DOCUMENT_16', 'FLAG_DOCUMENT_17',
-                    'FLAG_DOCUMENT_18', 'FLAG_DOCUMENT_19', 'FLAG_DOCUMENT_20', 'FLAG_DOCUMENT_21']
-        for doc in doc_flags:
-            defaults[doc] = 0
-        
-        defaults['AMT_REQ_CREDIT_BUREAU_HOUR'] = 0
-        defaults['AMT_REQ_CREDIT_BUREAU_DAY'] = 0
-        defaults['AMT_REQ_CREDIT_BUREAU_WEEK'] = 0
-        defaults['AMT_REQ_CREDIT_BUREAU_MON'] = 1
-        defaults['AMT_REQ_CREDIT_BUREAU_QRT'] = 0
-        defaults['AMT_REQ_CREDIT_BUREAU_YEAR'] = 1
-        
-        defaults['YEARS_BIRTH'] = -40  
-        defaults['YEARS_EMPLOYED'] = -5  
-        defaults['YEARS_REGISTRATION'] = -10
+        defaults['EXT_SOURCE_2'] = 0.5
         defaults['YEARS_ID_PUBLISH'] = -3
+        defaults['YEARS_EMPLOYED'] = -5
+        defaults['YEARS_REGISTRATION'] = -10
+        defaults['YEARS_BIRTH'] = -40
+        defaults['AMT_ANNUITY'] = 25000
+        defaults['SK_ID_CURR'] = 300000
+        defaults['REGION_POPULATION_RELATIVE'] = 0.02
         defaults['YEARS_LAST_PHONE_CHANGE'] = -2
-        
-        defaults['PREV_SK_ID_PREV_COUNT'] = 1
-        defaults['PREV_SK_ID_CURR_FIRST'] = 299999
-        defaults['PREV_AMT_ANNUITY_MEAN'] = 20000
-        defaults['PREV_AMT_ANNUITY_MEDIAN'] = 20000
-        defaults['PREV_AMT_APPLICATION_MEAN'] = 400000
-        defaults['PREV_AMT_APPLICATION_MEDIAN'] = 400000
-        defaults['PREV_AMT_CREDIT_MEAN'] = 400000
-        defaults['PREV_AMT_CREDIT_MEDIAN'] = 400000
-        defaults['PREV_AMT_GOODS_PRICE_MEAN'] = 350000
-        defaults['PREV_AMT_GOODS_PRICE_MEDIAN'] = 350000
-        
-        lambda_features = [
-            'PREV_NAME_CONTRACT_TYPE_<LAMBDA>', 'PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>',
-            'PREV_NAME_CASH_LOAN_PURPOSE_<LAMBDA>', 'PREV_NAME_CONTRACT_STATUS_<LAMBDA>',
-            'PREV_NAME_PAYMENT_TYPE_<LAMBDA>', 'PREV_CODE_REJECT_REASON_<LAMBDA>',
-            'PREV_NAME_CLIENT_TYPE_<LAMBDA>', 'PREV_NAME_GOODS_CATEGORY_<LAMBDA>',
-            'PREV_NAME_PORTFOLIO_<LAMBDA>', 'PREV_NAME_PRODUCT_TYPE_<LAMBDA>',
-            'PREV_CHANNEL_TYPE_<LAMBDA>', 'PREV_NAME_SELLER_INDUSTRY_<LAMBDA>',
-            'PREV_NAME_YIELD_GROUP_<LAMBDA>', 'PREV_PRODUCT_COMBINATION_<LAMBDA>'
-        ]
-        for feat in lambda_features:
-            defaults[feat] = 0
-        
-        defaults['PREV_NFLAG_LAST_APPL_IN_DAY_MAX'] = 0
-        defaults['PREV_NFLAG_INSURED_ON_APPROVAL_MAX'] = 0
-        defaults['PREV_CNT_PAYMENT_MAX'] = 36
-        
-        defaults['PREV_HOUR_APPR_PROCESS_START_MEAN'] = 10
         defaults['PREV_SELLERPLACE_AREA_MEAN'] = 10
         defaults['PREV_YEARS_DECISION_MEAN'] = -1
-        defaults['PREV_YEARS_FIRST_DRAWING_MEAN'] = -1
+        defaults['AMT_CREDIT'] = 500000
+        defaults['PREV_HOUR_APPR_PROCESS_START_MEAN'] = 10
         defaults['PREV_YEARS_FIRST_DUE_MEAN'] = -1
+        defaults['PREV_CNT_PAYMENT_MAX'] = 36
+        defaults['AMT_INCOME_TOTAL'] = 150000
+        defaults['AMT_GOODS_PRICE'] = 450000
+        defaults['PREV_AMT_ANNUITY_MEAN'] = 20000
         defaults['PREV_YEARS_LAST_DUE_1ST_VERSION_MEAN'] = -1
-        defaults['PREV_YEARS_LAST_DUE_MEAN'] = -1
+        defaults['PREV_AMT_ANNUITY_MEDIAN'] = 20000
+        defaults['PREV_SK_ID_PREV_COUNT'] = 1
         defaults['PREV_YEARS_TERMINATION_MEAN'] = -1
+        defaults['PREV_AMT_CREDIT_MEDIAN'] = 400000
+        defaults['AMT_REQ_CREDIT_BUREAU_YEAR'] = 1
+        defaults['PREV_YEARS_LAST_DUE_MEAN'] = -1
+        defaults['OCCUPATION_TYPE'] = 'Laborers'
+        defaults['PREV_AMT_APPLICATION_MEDIAN'] = 400000
+        defaults['PREV_PRODUCT_COMBINATION_<LAMBDA>'] = 0
+        defaults['PREV_AMT_CREDIT_MEAN'] = 400000
+        defaults['CNT_FAM_MEMBERS'] = 2
+        defaults['OBS_30_CNT_SOCIAL_CIRCLE'] = 2
+        defaults['OWN_CAR_AGE'] = 0
+        defaults['PREV_AMT_APPLICATION_MEAN'] = 400000
+        defaults['PREV_AMT_GOODS_PRICE_MEDIAN'] = 350000
+        defaults['HOUR_APPR_PROCESS_START'] = 10
+        defaults['PREV_AMT_GOODS_PRICE_MEAN'] = 350000
+        defaults['PREV_YEARS_FIRST_DRAWING_MEAN'] = -1
+        defaults['PREV_SK_ID_CURR_FIRST'] = 299999
+        defaults['OBS_60_CNT_SOCIAL_CIRCLE'] = 2
+        defaults['PREV_NAME_GOODS_CATEGORY_<LAMBDA>'] = 0
+        defaults['PREV_NFLAG_INSURED_ON_APPROVAL_MAX'] = 0
+        defaults['WEEKDAY_APPR_PROCESS_START'] = 'WEDNESDAY'
+        defaults['PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>'] = 0
         
         return defaults
     
@@ -260,7 +168,7 @@ def main():
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.subheader("Basic Information")
+            st.subheader("Financial Information")
             income_total = st.number_input("Total Income (AMT_INCOME_TOTAL)", min_value=0, value=150000, step=1000)
             credit_amt = st.number_input("Credit Amount (AMT_CREDIT)", min_value=0, value=500000, step=1000)
             annuity_amt = st.number_input("Annuity Amount (AMT_ANNUITY)", min_value=0, value=25000, step=100)
@@ -268,50 +176,19 @@ def main():
             
         with col2:
             st.subheader("Personal Details")
-            cnt_children = st.number_input("Number of Children (CNT_CHILDREN)", min_value=0, value=0)
             cnt_fam_members = st.number_input("Family Members (CNT_FAM_MEMBERS)", min_value=1, value=2)
             age = st.number_input("Age (Years)", min_value=18, max_value=100, value=40)
             employment_length = st.number_input("Years Employed", min_value=0, max_value=50, value=5)
+            own_car_age = st.number_input("Car Age (OWN_CAR_AGE)", min_value=0, value=0)
             
         with col3:
-            st.subheader("External Scores")
-            ext_source_2 = st.slider("External Source 2 Score (EXT_SOURCE_2)", 0.0, 1.0, 0.5, 0.01)
-            ext_source_3 = st.slider("External Source 3 Score (EXT_SOURCE_3)", 0.0, 1.0, 0.5, 0.01)
-            region_rating = st.selectbox("Region Rating (REGION_RATING_CLIENT)", [1, 2, 3], index=1)
-            
-        st.subheader("Additional Information")
-        col4, col5 = st.columns(2)
-        
-        with col4:
-            obs_30_cnt = st.number_input("Observable 30 Days Social Circle (OBS_30_CNT_SOCIAL_CIRCLE)", min_value=0, value=2)
-            def_30_cnt = st.number_input("Default 30 Days Social Circle (DEF_30_CNT_SOCIAL_CIRCLE)", min_value=0, value=0)
-            amt_req_year = st.number_input("Credit Bureau Requests Year (AMT_REQ_CREDIT_BUREAU_YEAR)", min_value=0, value=1)
-            obs_60_cnt = st.number_input("Observable 60 Days Social Circle (OBS_60_CNT_SOCIAL_CIRCLE)", min_value=0, value=2)
-            def_60_cnt = st.number_input("Default 60 Days Social Circle (DEF_60_CNT_SOCIAL_CIRCLE)", min_value=0, value=0)
-            amt_req_mon = st.number_input("Credit Bureau Requests Month (AMT_REQ_CREDIT_BUREAU_MON)", min_value=0, value=1)
-            
-        with col5:
-            contract_type = st.selectbox("Contract Type (NAME_CONTRACT_TYPE)", ["Cash loans", "Revolving loans"])
-            gender = st.selectbox("Gender (CODE_GENDER)", ["M", "F"])
-            education = st.selectbox("Education (NAME_EDUCATION_TYPE)", [
-                "Secondary / secondary special", "Higher education", 
-                "Incomplete higher", "Lower secondary", "Academic degree"
-            ])
-            flag_own_car = st.selectbox("Owns Car (FLAG_OWN_CAR)", ["Y", "N"])
-            flag_own_realty = st.selectbox("Owns Realty (FLAG_OWN_REALTY)", ["Y", "N"])
-            own_car_age = st.number_input("Car Age if Owned (OWN_CAR_AGE)", min_value=0, value=0)
-        
-        st.subheader("Contact & Location Details")
-        col6, col7 = st.columns(2)
-        
-        with col6:
-            flag_work_phone = st.selectbox("Has Work Phone (FLAG_WORK_PHONE)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
-            flag_phone = st.selectbox("Has Phone (FLAG_PHONE)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
-            flag_email = st.selectbox("Has Email (FLAG_EMAIL)", [1, 0], format_func=lambda x: "Yes" if x == 1 else "No")
-            
-        with col7:
-            region_rating_w_city = st.selectbox("Region Rating with City (REGION_RATING_CLIENT_W_CITY)", [1, 2, 3], index=1)
-            hour_appr_process_start = st.number_input("Application Hour (HOUR_APPR_PROCESS_START)", min_value=0, max_value=23, value=10)
+            st.subheader("External & Social")
+            ext_source_2 = st.slider("External Source 2 (EXT_SOURCE_2)", 0.0, 1.0, 0.5, 0.01)
+            ext_source_3 = st.slider("External Source 3 (EXT_SOURCE_3)", 0.0, 1.0, 0.5, 0.01)
+            obs_30_cnt = st.number_input("Social Circle 30 (OBS_30_CNT)", min_value=0, value=2)
+            obs_60_cnt = st.number_input("Social Circle 60 (OBS_60_CNT)", min_value=0, value=2)
+            amt_req_year = st.number_input("Credit Bureau Reqs/Year", min_value=0, value=1)
+            hour_appr_process_start = st.number_input("Appr. Hour", min_value=0, max_value=23, value=10)
         
         submitted = st.form_submit_button("Predict Default Risk")
         
@@ -321,30 +198,16 @@ def main():
                 'credit_amt': credit_amt,
                 'annuity_amt': annuity_amt,
                 'goods_price': goods_price,
-                'cnt_children': cnt_children,
                 'cnt_fam_members': cnt_fam_members,
                 'age': age,
                 'employment_length': employment_length,
+                'own_car_age': own_car_age,
                 'ext_source_2': ext_source_2,
                 'ext_source_3': ext_source_3,
-                'region_rating': region_rating,
                 'obs_30_cnt': obs_30_cnt,
-                'def_30_cnt': def_30_cnt,
-                'amt_req_year': amt_req_year,
-                'contract_type': contract_type,
-                'gender': gender,
-                'education': education,
-                'flag_own_car': flag_own_car,
-                'flag_own_realty': flag_own_realty,
-                'own_car_age': own_car_age,
-                'flag_work_phone': flag_work_phone,
-                'flag_phone': flag_phone,
-                'flag_email': flag_email,
-                'region_rating_w_city': region_rating_w_city,
-                'hour_appr_process_start': hour_appr_process_start,
                 'obs_60_cnt': obs_60_cnt,
-                'def_60_cnt': def_60_cnt,
-                'amt_req_mon': amt_req_mon,
+                'amt_req_year': amt_req_year,
+                'hour_appr_process_start': hour_appr_process_start
             }
     
     if submitted and user_inputs is not None:
