@@ -15,7 +15,7 @@ except FileNotFoundError:
     st.error("Model file 'LoanDefaulter_LightGBM.pkl' not found.")
     st.stop()
 
-st.title("💵 Loan Defaulter Prediction")
+st.title("Loan Defaulter Prediction App")
 
 with st.form("prediction_form"):
     st.header("Applicant Information")
@@ -30,8 +30,26 @@ with st.form("prediction_form"):
         years_registration = st.number_input("YEARS_REGISTRATION", value=24.454483)
         years_id_publish = st.number_input("YEARS_ID_PUBLISH", value=12.755647)
         cnt_fam_members = st.number_input("CNT_FAM_MEMBERS", value=2.0)
-        occupation_type = st.text_input("OCCUPATION_TYPE", value="Laborers")
-        organization_type = st.text_input("ORGANIZATION_TYPE", value="Business Entity Type 3")
+        
+        occupation_options = ['Laborers', 'Accountants', 'Managers', 'Sales staff', 'Drivers', 'Core staff', 
+                              'Medicine staff', 'High skill tech staff', 'Secretaries', 'Waiters/barmen staff', 
+                              'Cooking staff', 'Realty agents', 'Cleaning staff', 'Low-skill Laborers', 
+                              'Private service staff', 'Security staff', 'HR staff', 'IT staff']
+        occupation_type = st.selectbox("OCCUPATION_TYPE", options=occupation_options, index=occupation_options.index("Laborers"))
+        
+        organization_options = ['Business Entity Type 3', 'Government', 'Other', 'Trade: type 7', 'Business Entity Type 2', 
+                                'Security Ministries', 'Self-employed', 'Construction', 'Transport: type 4', 'Trade: type 2', 
+                                'Housing', 'Industry: type 3', 'Military', 'Trade: type 3', 'Business Entity Type 1', 
+                                'Industry: type 2', 'School', 'Kindergarten', 'Industry: type 9', 'Medicine', 'Emergency', 
+                                'Industry: type 11', 'Police', 'Industry: type 5', 'Industry: type 10', 'Postal', 
+                                'Industry: type 4', 'Agriculture', 'Bank', 'Industry: type 12', 'University', 
+                                'Transport: type 2', 'Services', 'Transport: type 3', 'Industry: type 7', 'Restaurant', 
+                                'Telecom', 'Security', 'Mobile', 'Industry: type 1', 'Cleaning', 'Insurance', 'Electricity', 
+                                'Religion', 'Advertising', 'Trade: type 1', 'Legal Services', 'Realtor', 'Trade: type 6', 
+                                'Culture', 'Hotel', 'Transport: type 1', 'Industry: type 6', 'Industry: type 13', 
+                                'Industry: type 8', 'Trade: type 4', 'Trade: type 5']
+        organization_type = st.selectbox("ORGANIZATION_TYPE", options=organization_options, index=organization_options.index("Business Entity Type 3"))
+        
         region_pop_relative = st.number_input("REGION_POPULATION_RELATIVE", value=0.035792, format="%.6f")
 
     with col2:
@@ -48,7 +66,9 @@ with st.form("prediction_form"):
 
     with col3:
         st.subheader("Process & Social")
-        weekday_appr = st.text_input("WEEKDAY_APPR_PROCESS_START", value="SATURDAY")
+        weekday_options = ['WEDNESDAY', 'MONDAY', 'SUNDAY', 'THURSDAY', 'SATURDAY', 'FRIDAY', 'TUESDAY']
+        weekday_appr = st.selectbox("WEEKDAY_APPR_PROCESS_START", options=weekday_options, index=weekday_options.index("SATURDAY"))
+        
         hour_appr = st.number_input("HOUR_APPR_PROCESS_START", value=14)
         obs_30 = st.number_input("OBS_30_CNT_SOCIAL_CIRCLE", value=4.0)
         obs_60 = st.number_input("OBS_60_CNT_SOCIAL_CIRCLE", value=4.0)
@@ -81,9 +101,22 @@ with st.form("prediction_form"):
         prev_hour_appr_mean = st.number_input("PREV_HOUR_APPR_PROCESS_START_MEAN", value=13.0)
         prev_nflag_insured_max = st.number_input("PREV_NFLAG_INSURED_ON_APPROVAL_MAX", value=0.0)
         
-        prev_prod_comb = st.text_input("PREV_PRODUCT_COMBINATION_<LAMBDA>", value="Cash")
-        prev_goods_cat = st.text_input("PREV_NAME_GOODS_CATEGORY_<LAMBDA>", value="XNA")
-        prev_weekday_lambda = st.text_input("PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>", value="TUESDAY")
+        prev_prod_comb_options = ['POS other with interest', 'POS mobile without interest', 'POS household with interest', 
+                                  'POS industry without interest', 'Cash X-Sell: high', 'POS industry with interest', 'Cash', 
+                                  'Cash Street: low', 'POS mobile with interest', 'Cash Street: high', 'Card X-Sell', 
+                                  'Cash X-Sell: low', 'Card Street', 'Cash X-Sell: middle', 'POS household without interest', 
+                                  'Cash Street: middle', 'POS others without interest']
+        prev_prod_comb = st.selectbox("PREV_PRODUCT_COMBINATION_<LAMBDA>", options=prev_prod_comb_options, index=prev_prod_comb_options.index("Cash"))
+        
+        prev_goods_cat_options = ['Vehicles', 'Mobile', 'Audio/Video', 'Furniture', 'XNA', 'Clothing and Accessories', 
+                                  'Computers', 'Consumer Electronics', 'Auto Accessories', 'Medicine', 'Photo / Cinema Equipment', 
+                                  'Office Appliances', 'Jewelry', 'Construction Materials', 'Gardening', 'Homewares', 
+                                  'Medical Supplies', 'Tourism', 'Insurance', 'Sport and Leisure', 'Other', 'Additional Service', 
+                                  'Fitness', 'Education', 'Direct Sales']
+        prev_goods_cat = st.selectbox("PREV_NAME_GOODS_CATEGORY_<LAMBDA>", options=prev_goods_cat_options, index=prev_goods_cat_options.index("XNA"))
+        
+        prev_weekday_options = ['SATURDAY', 'FRIDAY', 'TUESDAY', 'MONDAY', 'SUNDAY', 'WEDNESDAY', 'THURSDAY']
+        prev_weekday_lambda = st.selectbox("PREV_WEEKDAY_APPR_PROCESS_START_<LAMBDA>", options=prev_weekday_options, index=prev_weekday_options.index("TUESDAY"))
 
     submit_button = st.form_submit_button("Predict Status")
 
