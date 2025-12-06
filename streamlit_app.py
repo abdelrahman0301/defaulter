@@ -160,11 +160,11 @@ if submit_button:
         st.subheader("Prediction Results")
         
         if prediction_class == 1:
-            st.error(f"Class: Defaulter (1)")
+            st.error(f"Risk Level: High Risk")
         else:
-            st.success(f"Class: Non-Defaulter (0)")
+            st.success(f"Risk Level: Low Risk")
             
-        st.write(f"**Probability:** {probability:.4f}")
+        st.write(f"**Probability:** {probability:.2%}")
         st.write(f"**Raw Score:** {raw_prediction:.4f}")
 
     except Exception as e:
