@@ -15,7 +15,7 @@ except FileNotFoundError:
     st.error("Model file 'LoanDefaulter_LightGBM.pkl' not found.")
     st.stop()
 
-st.title("💵 Loan Defaulter Prediction App")
+st.title("💵 Loan Defaulter Prediction")
 
 with st.form("prediction_form"):
     st.header("Applicant Information")
