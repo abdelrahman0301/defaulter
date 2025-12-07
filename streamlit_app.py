@@ -2,6 +2,31 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import os
+import google.generativeai as genai
+
+
+genai.configure(api_key=st.secrets["gemini"]["api_key"])
+
+SYSTEM_INSTRUCTION = (
+    "You are an expert system in the field of loans and credit risk. Your primary task is to provide concise, accurate, and helpful answers in based on the conversation context."
+    "If you receive a message starting with 'SYSTEM LOG:', read the information and store it in context, but **do not generate a response** to the user for that log message."
+    "Be **brief and direct** in your answers. **Do not volunteer additional or analytical information** unless explicitly requested by the user."
+)
+
+MODEL_NAME = "gemini-2.5-flash"
+
+if "chat_session" not in st.session_state:
+    try:
+        model = genai.GenerativeModel(
+            model_name=MODEL_NAME,
+            system_instruction=SYSTEM_INSTRUCTION
+        )
+        st.session_state.chat_session = model.start_chat()
+    except Exception as e:
+        st.error(f"Failed to initialize chatbot: {str(e)}")
+
+
 
 st.set_page_config(page_title="Loan Defaulter Prediction", layout="wide")
 
@@ -183,22 +208,85 @@ if submit_button:
     for col in categorical_cols:
         df[col] = df[col].astype('category')
 
+
     try:
         raw_prediction = model.predict(df, raw_score=True)[0]
-        
         probability = 1 / (1 + np.exp(-raw_prediction))
-        
         prediction_class = 1 if probability > 0.5 else 0
-
+        
         st.subheader("Prediction Results")
         
         if prediction_class == 1:
-            st.error(f"Risk Level: High Risk")
+            st.error(f"Risk Level: High Risk (Defaulter)")
+            result_text = "High Risk (Defaulter)"
         else:
-            st.success(f"Risk Level: Low Risk")
+            st.success(f"Risk Level: Low Risk (Non-Defaulter)")
+            result_text = "Low Risk (Non-Defaulter)"
             
         st.write(f"**Probability:** {probability:.2%}")
         st.write(f"**Raw Score:** {raw_prediction:.4f}")
 
+
+        if st.session_state.get('chat_session'):
+            system_log_message = (
+                f"SYSTEM LOG: New user loan data received. "
+                f"Inputs: Loan Credit={input_data['AMT_CREDIT']}, "
+                f"Income={input_data['AMT_INCOME_TOTAL']}, "
+                f"Ext. Score 3={input_data['EXT_SOURCE_3']}, "
+                f"Ext. Score 2={input_data['EXT_SOURCE_2']}, "
+                f"Years Employed={input_data['YEARS_EMPLOYED']} years, "
+                f"Years ID Publish={input_data['YEARS_ID_PUBLISH']} years, "
+                f"Years Registration={input_data['YEARS_REGISTRATION']} years, "
+                f"Years Birth={input_data['YEARS_BIRTH']} years, "
+                f"Annuity={input_data['AMT_ANNUITY']}, "
+                f"Goods Price={input_data['AMT_GOODS_PRICE']}, "
+                f"Organization Type={input_data['ORGANIZATION_TYPE']}, "
+                f"Occupation Type={input_data['OCCUPATION_TYPE']}, "
+                f"Family Members={input_data['CNT_FAM_MEMBERS']}, "
+                f"Region Population Relative={input_data['REGION_POPULATION_RELATIVE']}, "
+                f"Own Car Age={input_data['OWN_CAR_AGE']}, "
+                f"ID={input_data['SK_ID_CURR']}, "
+                f"Results: Risk={result_text}, Probability={probability:.2%}, Raw Score={raw_prediction:.4f}."
+                f"Please acknowledge this data but **do not respond** to the user at this time."
+            )
+            
+            st.session_state.chat_session.send_message(system_log_message)
+            
     except Exception as e:
         st.error(f"An error occurred during prediction: {str(e)}")
+
+
+if "chat_messages" not in st.session_state:
+    st.session_state.chat_messages = []
+
+st.markdown("---")
+st.header("🤖 Prediction Analysis Chatbot")
+
+for message in st.session_state.chat_messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+if prompt := st.chat_input("Ask about the prediction results or general loan questions..."):
+    
+    st.session_state.chat_messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    if st.session_state.get('chat_session'):
+        try:
+            response = st.session_state.chat_session.send_message(prompt)
+            bot_response = response.text
+            
+        except Exception as e:
+            error_detail = str(e)
+            if "rate limit" in error_detail.lower() or "quota" in error_detail.lower():
+                 bot_response = "I've reached the usage limit. Please try later. 📉"
+            else:
+                 bot_response = f"An unexpected error occurred: {error_detail}"
+
+        with st.chat_message("assistant"):
+            st.markdown(bot_response)
+            st.session_state.chat_messages.append({"role": "assistant", "content": bot_response})
+    else:
+        with st.chat_message("assistant"):
+            st.markdown("Chatbot is currently offline due to initialization error. Check console/API Key.")
