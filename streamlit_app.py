@@ -11,7 +11,6 @@ genai.configure(api_key=st.secrets["gemini"]["api_key"])
 SYSTEM_INSTRUCTION = (
     "You are an expert system in the field of loans and credit risk. Your primary task is to provide concise, accurate, and helpful answers in based on the conversation context."
     "If you receive a message starting with 'SYSTEM LOG:', read the information and store it in context, but **do not generate a response** to the user for that log message."
-    "Be **brief and direct** in your answers. **Do not volunteer additional or analytical information** unless explicitly requested by the user."
 )
 
 MODEL_NAME = "gemini-2.5-flash"
